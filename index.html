@@ -1,0 +1,2450 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AnkiPro – HOSSAIN B2</title>
+<!-- No external SDK - uses direct REST API -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ══════════════════════════════════
+   TOKENS & RESET
+══════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07090d;--s1:#0c1018;--s2:#111722;--s3:#161f2e;--s4:#1b2538;--s5:#202c40;
+  --teal:#2dd4bf;--t2:#14b8a6;--t3:#0d9488;--t4:#0a7567;
+  --red:#f87171;--r2:#dc2626;--orange:#fb923c;
+  --green:#4ade80;--g2:#16a34a;
+  --yellow:#facc15;--purple:#a78bfa;--blue:#60a5fa;
+  --c1:#f0f4f8;--c2:#94a3b8;--c3:#64748b;--c4:#475569;--c5:#2d3a4a;
+  --bd:rgba(255,255,255,0.055);--bd2:rgba(255,255,255,0.09);
+  --ra:10px;--rb:14px;--rc:20px;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--c1);font-family:var(--font);font-size:14px;overflow:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s5);border-radius:2px}
+
+/* ══════════════════════════════════
+   LAYOUT
+══════════════════════════════════ */
+.app{display:flex;height:100vh}
+#sidebar{width:220px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:width .3s}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#page-body{flex:1;overflow-y:auto;padding:20px 22px}
+
+/* ══════════════════════════════════
+   SIDEBAR
+══════════════════════════════════ */
+.logo{padding:18px 14px 14px;border-bottom:1px solid var(--bd)}
+.logo-row{display:flex;align-items:center;gap:9px}
+.logo-gem{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--t3),var(--t4));display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 18px rgba(13,148,136,0.4);flex-shrink:0}
+.logo-name{font-size:15px;font-weight:800;letter-spacing:-0.5px}
+.logo-badge{font-size:9px;color:var(--teal);background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.18);padding:2px 7px;border-radius:4px;margin-top:2px;display:inline-block;letter-spacing:1.2px;font-weight:600}
+.sync-dot{width:7px;height:7px;border-radius:50%;margin-left:auto;flex-shrink:0;transition:background .3s}
+.sync-dot.ok{background:var(--green)}.sync-dot.syncing{background:var(--yellow);animation:blink 1s ease infinite}
+.sync-dot.err{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.user-blk{padding:11px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:9px}
+.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--t3),var(--purple));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.u-name{font-size:11px;font-weight:600}.u-sub{font-size:9px;color:var(--c4);margin-top:1px}
+.u-xp{height:2px;background:var(--s5);border-radius:1px;margin-top:4px;overflow:hidden}
+.u-xp-fill{height:100%;width:68%;background:linear-gradient(90deg,var(--t3),var(--teal))}
+
+.nav{flex:1;overflow-y:auto;padding:8px}
+.ns{font-size:9px;color:var(--c5);text-transform:uppercase;letter-spacing:1.5px;padding:9px 8px 3px;font-weight:700}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--c3);margin-bottom:1px;transition:all .14s;user-select:none}
+.ni:hover{color:var(--c2);background:rgba(255,255,255,.03)}
+.ni.on{color:var(--teal);font-weight:600;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.12)}
+.ni svg{width:14px;height:14px;flex-shrink:0;stroke-width:2}
+.nb{margin-left:auto;font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;line-height:1.5}
+.nb.r{background:rgba(220,38,38,.15);color:var(--red)}.nb.g{background:rgba(13,148,136,.15);color:var(--teal)}
+
+/* ══════════════════════════════════
+   TOPBAR
+══════════════════════════════════ */
+#topbar{height:50px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 18px;gap:12px;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:700;flex:1;letter-spacing:-0.3px}
+.chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:16px;font-size:11px;font-weight:600;border:1px solid}
+.chip.fire{background:rgba(250,204,21,.06);border-color:rgba(250,204,21,.14);color:var(--yellow)}
+.chip.xp{background:rgba(45,212,191,.05);border-color:rgba(45,212,191,.1);color:var(--teal)}
+.xpr{width:70px;height:3px;background:var(--s5);border-radius:2px;overflow:hidden}
+.xpf{height:100%;width:68%;background:linear-gradient(90deg,var(--t3),var(--teal))}
+
+/* ══════════════════════════════════
+   CARDS / GRID
+══════════════════════════════════ */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rb);padding:18px 20px;margin-bottom:10px}
+.card:hover{border-color:var(--bd2)}
+.ct{font-size:9.5px;color:var(--c4);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+
+/* ══════════════════════════════════
+   METRIC
+══════════════════════════════════ */
+.mc{background:var(--s2);border:1px solid var(--bd);border-radius:var(--ra);padding:13px 15px;transition:all .2s;cursor:default}
+.mc:hover{border-color:var(--bd2);transform:translateY(-1px)}
+.mv{font-size:28px;font-weight:800;line-height:1;letter-spacing:-1px}
+.ml{font-size:9px;color:var(--c4);margin-top:4px;text-transform:uppercase;letter-spacing:.9px}
+.mch{font-size:10px;margin-top:3px}
+.up{color:var(--green)}.dn{color:var(--red)}.nu{color:var(--c4)}
+
+/* chart */
+.cw{position:relative;width:100%}
+.cw.h160{height:160px}.cw.h200{height:200px}.cw.h240{height:240px}.cw.h280{height:280px}
+
+/* ══════════════════════════════════
+   DECK LIST
+══════════════════════════════════ */
+.deck-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--ra);cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:6px}
+.deck-row:hover{background:var(--s2);border-color:var(--bd)}
+.deck-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid var(--bd)}
+.deck-info{flex:1;min-width:0}
+.deck-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.deck-sub{font-size:10px;color:var(--c4)}
+.deck-counts{display:flex;gap:5px}
+.dc{font-size:12px;font-weight:700;padding:3px 8px;border-radius:7px}
+.dc.new{background:rgba(96,165,250,.1);color:var(--blue)}
+.dc.lrn{background:rgba(251,146,60,.1);color:var(--orange)}
+.dc.rev{background:rgba(74,222,128,.1);color:var(--green)}
+
+/* ══════════════════════════════════
+   REVIEW SCREEN
+══════════════════════════════════ */
+.rev-wrap{display:flex;flex-direction:column;height:100%;padding:14px 18px;gap:10px}
+.rev-prog{height:3px;background:var(--s4);border-radius:2px;overflow:hidden;flex-shrink:0}
+.rev-prog-fill{height:100%;background:linear-gradient(90deg,var(--t3),var(--teal));transition:width .4s ease}
+.flip-scene{flex:1;perspective:1200px;cursor:pointer;min-height:0}
+.flip-card{width:100%;height:100%;transition:transform .55s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;position:relative}
+.flip-card.flipped{transform:rotateY(180deg)}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--rc);border:1px solid var(--bd2);display:flex;flex-direction:column;overflow:hidden}
+.fc-front{background:linear-gradient(160deg,var(--s2),var(--s3))}
+.fc-back{background:linear-gradient(160deg,var(--s3),var(--s4));transform:rotateY(180deg)}
+.fc-hd{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.fc-type{font-size:9px;color:var(--c4);text-transform:uppercase;letter-spacing:1.2px;font-weight:700}
+.fc-tags{display:flex;gap:4px;flex-wrap:wrap}
+.fc-tag{font-size:9px;padding:1px 6px;border-radius:5px;background:var(--s4);color:var(--c3);border:1px solid var(--bd)}
+.fc-body{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;flex-direction:column;gap:12px;min-height:0;overflow-y:auto}
+.fc-em{font-size:50px;flex-shrink:0}
+.fc-sent{font-size:20px;font-weight:700;text-align:center;line-height:1.6;letter-spacing:-0.3px}
+.fc-sent .cloze{color:var(--teal);border-bottom:2px solid var(--teal);padding:0 4px}
+.fc-sent .blank{color:transparent;background:var(--s5);border-radius:4px;padding:0 18px;user-select:none}
+.fc-hint{font-size:11px;color:var(--c4);text-align:center;font-style:italic}
+.fc-trans{font-size:15px;color:var(--c2);text-align:center;line-height:1.7}
+.fc-gram{background:rgba(45,212,191,.06);border:1px solid rgba(45,212,191,.14);border-radius:var(--ra);padding:11px 13px;width:100%;font-size:11px;line-height:1.8;color:var(--c3)}
+.fc-gram strong{color:var(--teal);font-family:var(--mono);font-size:12px}
+.fc-gram em{color:var(--yellow)}
+.fc-ft{padding:10px 16px;border-top:1px solid var(--bd);text-align:center;flex-shrink:0;font-size:10px;color:var(--c5)}
+.ans-row{display:flex;gap:7px;flex-shrink:0}
+.ans{flex:1;border:none;border-radius:var(--rb);padding:11px 6px;cursor:pointer;font-weight:700;font-size:12px;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--font)}
+.ans:hover{transform:translateY(-2px);filter:brightness(1.15)}
+.ans .ai{font-size:9px;font-weight:500;opacity:.7}
+.again{background:rgba(220,38,38,.15);color:var(--red);border:1px solid rgba(220,38,38,.25)}
+.hard{background:rgba(251,146,60,.12);color:var(--orange);border:1px solid rgba(251,146,60,.22)}
+.good{background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.22)}
+.easy{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.22)}
+.done-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px;padding:30px;text-align:center}
+.done-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:400px}
+.ds{background:var(--s2);border:1px solid var(--bd);border-radius:var(--ra);padding:13px;text-align:center}
+.ds-v{font-size:22px;font-weight:800}.ds-l{font-size:10px;color:var(--c4);margin-top:2px;text-transform:uppercase;letter-spacing:.8px}
+
+/* ══════════════════════════════════
+   BROWSE TABLE
+══════════════════════════════════ */
+.btable{width:100%;border-collapse:collapse;font-size:12px}
+.btable th{padding:8px 10px;text-align:left;font-size:9px;color:var(--c4);text-transform:uppercase;letter-spacing:1px;font-weight:700;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--s1)}
+.btable td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btable tr:hover td{background:rgba(255,255,255,.02)}
+.spill{display:inline-block;padding:2px 7px;border-radius:6px;font-size:9px;font-weight:600}
+.sn{background:rgba(96,165,250,.1);color:var(--blue)}
+.sl{background:rgba(251,146,60,.1);color:var(--orange)}
+.sr{background:rgba(74,222,128,.1);color:var(--green)}
+.sch{background:rgba(248,113,113,.12);color:var(--red)}
+
+/* ══════════════════════════════════
+   ADD CARD FORM
+══════════════════════════════════ */
+.fl{font-size:10px;color:var(--c4);text-transform:uppercase;letter-spacing:.9px;font-weight:700;margin-bottom:5px;display:block}
+.fi{width:100%;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--ra);padding:9px 12px;color:var(--c1);font-size:13px;outline:none;font-family:var(--font);transition:border-color .15s}
+.fi:focus{border-color:var(--t3);box-shadow:0 0 0 3px rgba(13,148,136,.09)}
+.fi::placeholder{color:var(--c5)}
+textarea.fi{resize:vertical;min-height:60px;line-height:1.6}
+.fr{margin-bottom:13px}
+
+/* ══════════════════════════════════
+   BUTTONS
+══════════════════════════════════ */
+.btn{background:linear-gradient(135deg,var(--t3),var(--t4));color:#fff;border:none;border-radius:var(--ra);padding:10px 17px;cursor:pointer;font-size:12.5px;font-weight:600;letter-spacing:.3px;transition:all .15s;font-family:var(--font)}
+.btn:hover{opacity:.9;box-shadow:0 4px 14px rgba(13,148,136,.35);transform:translateY(-1px)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.sec{background:var(--s3);color:var(--c2);border:1px solid var(--bd2);box-shadow:none}
+.btn.sec:hover{background:var(--s4);transform:none;box-shadow:none}
+.btn.danger{background:rgba(220,38,38,.12);color:var(--red);border:1px solid rgba(220,38,38,.2);box-shadow:none}
+
+/* ══════════════════════════════════
+   HEATMAP
+══════════════════════════════════ */
+.heatmap{display:grid;grid-template-columns:repeat(26,1fr);gap:3px;margin-top:8px}
+.hc{aspect-ratio:1;border-radius:2px;cursor:pointer;transition:transform .1s}
+.hc:hover{transform:scale(1.4)}
+.h0{background:var(--s3)}.h1{background:rgba(13,148,136,.2)}.h2{background:rgba(13,148,136,.4)}.h3{background:rgba(13,148,136,.6)}.h4{background:rgba(13,148,136,.8)}.h5{background:var(--t3)}
+
+/* ══════════════════════════════════
+   MODALS
+══════════════════════════════════ */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.ov.on{display:flex}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--rc);width:500px;max-width:92vw;max-height:88vh;overflow-y:auto;padding:24px;animation:pop .22s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--s3);border:1px solid var(--bd2);border-radius:24px;padding:9px 18px;font-size:12px;font-weight:500;z-index:500;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(74,222,128,.3);color:var(--green)}
+.toast.bad{border-color:rgba(248,113,113,.3);color:var(--red)}
+.toast.warn{border-color:rgba(250,204,21,.3);color:var(--yellow)}
+
+/* ══════════════════════════════════
+   LOADING OVERLAY
+══════════════════════════════════ */
+#loading-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}
+#loading-screen.hidden{opacity:0;pointer-events:none}
+.spin{width:36px;height:36px;border:3px solid rgba(45,212,191,.15);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══════════════════════════════════
+   SKILL BARS
+══════════════════════════════════ */
+.sk-bar{height:6px;background:var(--s4);border-radius:3px;overflow:hidden;margin-top:5px}
+.sk-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* ══════════════════════════════════
+   MISC UTILS
+══════════════════════════════════ */
+.row{display:flex;align-items:center;gap:8px}
+.mb10{margin-bottom:10px}.mt8{margin-top:8px}.mt12{margin-top:12px}
+.mono{font-family:var(--mono)}
+.badge{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600}
+.page-anim{animation:pi .22s ease}
+@keyframes pi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sep{height:1px;background:var(--bd);margin:12px 0}
+.voc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.vc{background:var(--s2);border:1px solid var(--bd);border-radius:var(--ra);padding:11px 13px;cursor:pointer;transition:all .15s}
+.vc:hover{border-color:var(--t3);background:rgba(45,212,191,.04)}
+.vc-w{font-size:13px;font-weight:600;color:var(--c1);margin-bottom:2px}
+.vc-t{font-size:10px;color:var(--c4)}.vc-tag{font-size:9px;color:var(--teal);margin-top:3px}
+.export-area{background:var(--s2);border:1px solid var(--bd);border-radius:var(--ra);padding:14px;font-family:var(--mono);font-size:11px;max-height:200px;overflow-y:auto;word-break:break-all;color:var(--c3);margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div style="font-size:32px">🧠</div>
+  <div class="spin" id="load-spin"></div>
+  <div style="font-size:13px;color:var(--c3);text-align:center;max-width:300px;line-height:1.7;font-family:Inter,sans-serif" id="load-msg">در حال بارگذاری...</div>
+  <div style="font-size:11px;color:var(--c5);text-align:center;max-width:280px;font-family:monospace;margin-top:4px" id="load-sub"></div>
+  <button id="load-skip-btn" onclick="forceShowKeyPage()" style="display:none;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171;padding:8px 18px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;margin-top:4px;font-family:Inter,sans-serif">
+    ⚠️ رد کردن و ورود دستی کلید
+  </button>
+</div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="logo">
+      <div class="logo-row">
+        <div class="logo-gem">🧠</div>
+        <div>
+          <div class="logo-name">AnkiPro</div>
+          <div class="logo-badge">CLOUD · B2</div>
+        </div>
+        <div class="sync-dot" id="sync-dot" title="Sync-Status"></div>
+      </div>
+    </div>
+    <div class="user-blk">
+      <div class="av">HO</div>
+      <div style="flex:1;min-width:0">
+        <div class="u-name">HOSSAIN</div>
+        <div class="u-sub">Level 12 · Cloud-Sync ☁️</div>
+        <div class="u-xp"><div class="u-xp-fill" id="xp-fill"></div></div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="ns">Lernen</div>
+      <div class="ni on" id="ni-decks" onclick="go('decks')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Decks <span class="nb r" id="nb-due" style="display:none">0</span>
+      </div>
+      <div class="ni" id="ni-review" onclick="startReview()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round"/></svg>
+        Wiederholen <span class="nb r" id="nb-rev2" style="display:none">0</span>
+      </div>
+      <div class="ni" id="ni-voc" onclick="go('voc')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round"/></svg>
+        Vokabelliste
+      </div>
+      <div class="ni" id="ni-add" onclick="go('add')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round"/></svg>
+        Karte hinzufügen
+      </div>
+      <div class="ns">Analyse</div>
+      <div class="ni" id="ni-browse" onclick="go('browse')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h8" stroke-linecap="round"/></svg>
+        Kartenbrowser
+      </div>
+      <div class="ni" id="ni-stats" onclick="go('stats')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Statistiken
+      </div>
+      <div class="ns">System</div>
+      <div class="ni" id="ni-settings" onclick="go('settings')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke-linecap="round"/></svg>
+        Einstellungen
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <div class="tb-title" id="page-title">Decks</div>
+      <div class="row">
+        <div class="chip fire">🔥 <span id="streak-n">0</span> Tage</div>
+        <div class="chip xp">LVL 12 <div class="xpr"><div class="xpf"></div></div> 340/500</div>
+      </div>
+    </div>
+    <div id="page-body" class="page-anim"></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="ov" id="editModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700">Karte bearbeiten</div>
+      <button onclick="closeEdit()" class="btn sec" style="padding:5px 11px;font-size:11px">✕</button>
+    </div>
+    <div id="edit-body"></div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="ov" id="importModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700">📥 Import JSON</div>
+      <button onclick="document.getElementById('importModal').classList.remove('on')" class="btn sec" style="padding:5px 11px;font-size:11px">✕</button>
+    </div>
+    <textarea class="fi" id="import-json" rows="8" placeholder='[{"deck_id":"job","front":"...","back":"..."}]'></textarea>
+    <div class="row mt8">
+      <button onclick="doImport()" class="btn" style="flex:1">📥 Importieren</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<!-- Floating Action Button -->
+<button class="quick-add-fab" id="fab" onclick="go('add')" title="Neue Karte">＋</button>
+<!-- Toast Stack -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<!-- ══════════════════════════════════════════════════════
+  JAVASCRIPT MODULES
+══════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ════════════════════════════════════
+   MODULE 1: CONFIG & REST API LAYER
+   (No SDK - direct fetch to Supabase REST)
+════════════════════════════════════ */
+const CONFIG = {
+  SUPABASE_URL: 'https://jxlhorynzqurpdgvsynm.supabase.co',
+  SUPABASE_KEY: localStorage.getItem('sb_api_key') || '',
+  NEW_CARDS_PER_DAY: parseInt(localStorage.getItem('new_per_day') || '20'),
+};
+
+let SB = null; // Will be our REST helper
+
+/* ── REST helper - replaces Supabase SDK ── */
+function makeSB(url, key) {
+  const base = url + '/rest/v1';
+  const headers = {
+    'apikey': key,
+    'Authorization': 'Bearer ' + key,
+    'Content-Type': 'application/json',
+  };
+
+  async function req(method, table, params, body) {
+    params = params || {};
+    let qs = Object.entries(params).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+    const fullUrl = base + '/' + table + (qs ? '?' + qs : '');
+    const opts = { method: method, headers: { ...headers } };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+    if (method === 'POST') opts.headers['Prefer'] = 'return=representation';
+    if (method === 'PATCH') opts.headers['Prefer'] = 'return=representation';
+    try {
+      const resp = await fetch(fullUrl, opts);
+      if (!resp.ok) {
+        const errText = await resp.text();
+        return { data: null, error: { message: errText, status: resp.status } };
+      }
+      const text = await resp.text();
+      const data = text ? JSON.parse(text) : [];
+      return { data, error: null };
+    } catch (e) {
+      return { data: null, error: { message: e.message } };
+    }
+  }
+
+  return {
+    from: function(table) {
+      return {
+        select: function(cols) {
+          return {
+            limit: function(n) {
+              return req('GET', table, { select: cols || '*', limit: n });
+            },
+            order: function(col) {
+              return req('GET', table, { select: cols || '*', order: col });
+            },
+            eq: function(col, val) {
+              return req('GET', table, { select: cols || '*', [col]: 'eq.' + val });
+            },
+            then: function(resolve) {
+              return req('GET', table, { select: cols || '*' }).then(resolve);
+            }
+          };
+        },
+        insert: function(rows) {
+          const arr = Array.isArray(rows) ? rows : [rows];
+          return {
+            select: function() {
+              return { single: function() { return req('POST', table, {}, arr); } };
+            },
+            then: function(resolve) { return req('POST', table, {}, arr).then(resolve); }
+          };
+        },
+        upsert: function(rows, opts2) {
+          const arr = Array.isArray(rows) ? rows : [rows];
+          const extra = {};
+          if (opts2 && opts2.onConflict) extra.on_conflict = opts2.onConflict;
+          return req('POST', table, extra, arr);
+        },
+        update: function(fields) {
+          return {
+            eq: function(col, val) {
+              return req('PATCH', table, { [col]: 'eq.' + val }, fields);
+            },
+            gte: function(col, val) {
+              return req('PATCH', table, { [col]: 'gte.' + val }, fields);
+            }
+          };
+        },
+        delete: function() {
+          return {
+            eq: function(col, val) {
+              return req('DELETE', table, { [col]: 'eq.' + val });
+            }
+          };
+        }
+      };
+    }
+  };
+}
+
+async function initSupabase() {
+  if (!CONFIG.SUPABASE_KEY || CONFIG.SUPABASE_KEY.length < 10) {
+    setSyncDot('err');
+    return false;
+  }
+  SB = makeSB(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 6000);
+    const resp = await fetch(CONFIG.SUPABASE_URL + '/rest/v1/decks?select=id&limit=1', {
+      headers: { 'apikey': CONFIG.SUPABASE_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY },
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
+    if (!resp.ok) { setSyncDot('err'); return false; }
+    setSyncDot('ok');
+    return true;
+  } catch(e) {
+    // NetworkError, CORS, timeout - all silent fallback to offline
+    setSyncDot('err');
+    return false;
+  }
+}
+
+function setSyncDot(state) {
+  const dot = document.getElementById('sync-dot');
+  if (dot) dot.className = 'sync-dot ' + state;
+}
+
+/* ════════════════════════════════════
+   MODULE 2: STATE MANAGEMENT
+════════════════════════════════════ */
+const STATE = {
+  cards: [],        // loaded from Supabase
+  decks: [],        // loaded from Supabase
+  deckStats: {},    // {deck_id: {total,new,learning,review,due}}
+  reviewLog: [],    // daily stats from DB
+  settings: {},
+  session: { correct: 0, wrong: 0, done: 0 },
+  reviewQueue: [],
+  reviewIdx: 0,
+  revShown: false,
+  currentPage: 'decks',
+  charts: {},
+};
+
+function getCard(id) { return STATE.cards.find(c => c.id === id); }
+
+function getDue() {
+  const now = new Date();
+  return STATE.cards.filter(c => new Date(c.due) <= now && c.status !== 'leech');
+}
+function getNew() { return STATE.cards.filter(c => c.status === 'new'); }
+
+/* ════════════════════════════════════
+   MODULE 3: DUAL STORAGE
+   localStorage = primary (always works)
+   Supabase = optional cloud sync
+════════════════════════════════════ */
+
+const CLOUD_ENABLED = { value: false };
+
+/* ── localStorage helpers ── */
+const LS_KEYS = { cards: 'ap_cards', decks: 'ap_decks', settings: 'ap_settings', log: 'ap_log' };
+function lsGet(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+
+/* ── Supabase REST fetch wrapper ── */
+async function sbFetch(method, table, params, body) {
+  if (!CONFIG.SUPABASE_KEY) return { ok: false, data: null };
+  const base = CONFIG.SUPABASE_URL + '/rest/v1/' + table;
+  const qs = params ? '?' + params : '';
+  const headers = { 'apikey': CONFIG.SUPABASE_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY };
+  const opts = { method, headers };
+  if (body !== undefined) { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  if (method === 'POST') headers['Prefer'] = 'return=representation';
+  try {
+    const resp = await fetch(base + qs, opts);
+    if (!resp.ok) return { ok: false, data: null, status: resp.status };
+    const text = await resp.text();
+    return { ok: true, data: text ? JSON.parse(text) : [] };
+  } catch(e) {
+    return { ok: false, data: null, error: e.message };
+  }
+}
+
+/* ── Load functions ── */
+async function loadDecks() {
+  // Try Supabase if connected
+  if (CLOUD_ENABLED.value) {
+    const r = await sbFetch('GET', 'decks', 'select=*&order=id');
+    if (r.ok && r.data && r.data.length > 0) {
+      STATE.decks = r.data;
+      lsSet(LS_KEYS.decks, r.data);
+      setSyncDot('ok');
+      return;
+    }
+  }
+  // Fall back to localStorage
+  const cached = lsGet(LS_KEYS.decks);
+  STATE.decks = cached || [];
+  if (!CLOUD_ENABLED.value) setSyncDot('ok');
+}
+
+async function loadCards(deckId) {
+  if (CLOUD_ENABLED.value) {
+    const qs = 'select=*' + (deckId ? '&deck_id=eq.' + encodeURIComponent(deckId) : '') + '&order=created_at';
+    const r = await sbFetch('GET', 'cards', qs);
+    if (r.ok) {
+      if (deckId) {
+        STATE.cards = STATE.cards.filter(c => c.deck_id !== deckId).concat(r.data || []);
+      } else {
+        STATE.cards = r.data || [];
+        lsSet(LS_KEYS.cards, STATE.cards);
+      }
+      setSyncDot('ok');
+      return;
+    }
+  }
+  const cached = lsGet(LS_KEYS.cards);
+  STATE.cards = cached || [];
+}
+
+async function loadSettings() {
+  if (CLOUD_ENABLED.value) {
+    const r = await sbFetch('GET', 'settings', 'select=*');
+    if (r.ok && r.data) {
+      r.data.forEach(row => { STATE.settings[row.key] = row.value; });
+      lsSet(LS_KEYS.settings, STATE.settings);
+      return;
+    }
+  }
+  const cached = lsGet(LS_KEYS.settings);
+  if (cached) STATE.settings = cached;
+}
+
+async function loadReviewLog() {
+  if (CLOUD_ENABLED.value) {
+    const r = await sbFetch('GET', 'review_log', 'select=reviewed_at,correct&order=reviewed_at');
+    if (r.ok) { STATE.reviewLog = r.data || []; return; }
+  }
+  STATE.reviewLog = [];
+}
+
+/* ── Save functions ── */
+function lsSaveCards() { lsSet(LS_KEYS.cards, STATE.cards); }
+function lsSaveSettings() { lsSet(LS_KEYS.settings, STATE.settings); }
+
+async function saveCardToDB(card) {
+  setSyncDot('syncing');
+  if (CLOUD_ENABLED.value) {
+    const r = await sbFetch('POST', 'cards', null, card);
+    if (r.ok && r.data) {
+      const saved = Array.isArray(r.data) ? r.data[0] : r.data;
+      STATE.cards.push(saved);
+      lsSaveCards();
+      setSyncDot('ok');
+      updateBadges();
+      return saved;
+    }
+  }
+  // localStorage-only mode
+  const newCard = { ...card, id: 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2) };
+  STATE.cards.push(newCard);
+  lsSaveCards();
+  setSyncDot('ok');
+  updateBadges();
+  return newCard;
+}
+
+async function updateCardInDB(card) {
+  const fields = { interval: card.interval, ef: card.ef, reps: card.reps, lapses: card.lapses, due: card.due, status: card.status, total_reviews: card.total_reviews, correct_reviews: card.correct_reviews, last_review: card.last_review };
+  const idx = STATE.cards.findIndex(c => c.id === card.id);
+  if (idx >= 0) STATE.cards[idx] = { ...STATE.cards[idx], ...fields };
+  lsSaveCards();
+  if (CLOUD_ENABLED.value && !String(card.id).startsWith('local_')) {
+    sbFetch('PATCH', 'cards', 'id=eq.' + card.id, fields).then(r => {
+      setSyncDot(r.ok ? 'ok' : 'err');
+    }).catch(() => setSyncDot('err'));
+  }
+}
+
+async function updateCardFields(id, fields) {
+  const idx = STATE.cards.findIndex(c => c.id === id);
+  if (idx >= 0) STATE.cards[idx] = { ...STATE.cards[idx], ...fields };
+  lsSaveCards();
+  if (CLOUD_ENABLED.value && !String(id).startsWith('local_')) {
+    sbFetch('PATCH', 'cards', 'id=eq.' + id, fields).catch(() => {});
+  }
+  setSyncDot('ok');
+}
+
+async function deleteCardFromDB(id) {
+  STATE.cards = STATE.cards.filter(c => c.id !== id);
+  lsSaveCards();
+  if (CLOUD_ENABLED.value && !String(id).startsWith('local_')) {
+    sbFetch('DELETE', 'cards', 'id=eq.' + id).catch(() => {});
+  }
+  setSyncDot('ok');
+  return true;
+}
+
+function logReview(card, rating, correct, efBefore, efAfter, intBefore, intAfter) {
+  if (!CLOUD_ENABLED.value) return;
+  const row = { card_id: card.id, deck_id: card.deck_id, rating, correct, ef_before: efBefore, ef_after: efAfter, interval_before: intBefore, interval_after: intAfter, reviewed_at: new Date().toISOString() };
+  sbFetch('POST', 'review_log', null, row).catch(() => {});
+}
+
+async function updateStreak() {
+  const today = new Date().toISOString().slice(0,10);
+  const last = STATE.settings['last_study_date'] || '';
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  let streak = parseInt(STATE.settings['streak'] || '0');
+  if (last === today) return;
+  streak = last === yesterday ? streak + 1 : 1;
+  STATE.settings['streak'] = String(streak);
+  STATE.settings['last_study_date'] = today;
+  document.getElementById('streak-n').textContent = streak;
+  lsSaveSettings();
+  if (CLOUD_ENABLED.value) {
+    sbFetch('POST', 'settings', null, [{key:'streak',value:String(streak)},{key:'last_study_date',value:today}]).catch(() => {});
+  }
+}
+
+async function importCardsFromJSON(jsonArr) {
+  setSyncDot('syncing');
+  const rows = jsonArr.map(c => ({
+    deck_id: c.deck_id||'job', type: c.type||'cloze', front: c.front||'', back: c.back||'',
+    grammar: c.grammar||'', image: c.image||'📝', tags: c.tags||[],
+    word: c.word||'', translation: c.translation||c.back||'',
+    interval:1, ef:2.5, reps:0, lapses:0, due:new Date().toISOString(),
+    status:'new', total_reviews:0, correct_reviews:0,
+  }));
+  if (CLOUD_ENABLED.value) {
+    const r = await sbFetch('POST', 'cards', null, rows);
+    if (r.ok) {
+      STATE.cards.push(...(Array.isArray(r.data) ? r.data : []));
+      lsSaveCards(); setSyncDot('ok'); updateBadges();
+      return Array.isArray(r.data) ? r.data.length : 0;
+    }
+  }
+  // localStorage fallback
+  const now = Date.now();
+  const newCards = rows.map((c, i) => ({ ...c, id: 'local_' + (now + i) }));
+  STATE.cards.push(...newCards);
+  lsSaveCards(); setSyncDot('ok'); updateBadges();
+  return newCards.length;
+}
+
+/* ── Seed to localStorage ── */
+function seedToLocalStorage(force) {
+  // Re-seed if forced or if cached data is outdated (fewer cards than SEED_VOC)
+  const cachedOk = !force && STATE.decks.length > 0 && STATE.cards.length >= SEED_VOC.length;
+  if (cachedOk) return;
+  STATE.decks = SEED_DECKS.map(d => ({ ...d }));
+  const now = new Date().toISOString();
+  const t = Date.now();
+  STATE.cards = SEED_VOC.map((v, i) => ({
+    id: 'local_' + (t + i), deck_id: v[5], type: 'cloze',
+    front: v[6], back: v[1], grammar: v[2], image: v[3], tags: v[4],
+    word: v[0], translation: v[1],
+    interval:1, ef:2.5, reps:0, lapses:0, due:now, status:'new',
+    total_reviews:0, correct_reviews:0, last_review:null,
+  }));
+  lsSet(LS_KEYS.decks, STATE.decks);
+  lsSaveCards();
+}
+
+/* ── Seed to Supabase ── */
+async function seedDatabase(onProgress) {
+  const r1 = await sbFetch('POST', 'decks', 'on_conflict=id', SEED_DECKS);
+  if (!r1.ok) console.warn('Deck seed failed');
+
+  const now = new Date().toISOString();
+  const rows = SEED_VOC.map(v => ({
+    deck_id:v[5], type:'cloze', front:v[6], back:v[1], grammar:v[2], image:v[3], tags:v[4],
+    word:v[0], translation:v[1], interval:1, ef:2.5, reps:0, lapses:0,
+    due:now, status:'new', total_reviews:0, correct_reviews:0,
+  }));
+  const BATCH = 25;
+  for (let i = 0; i < rows.length; i += BATCH) {
+    await sbFetch('POST', 'cards', null, rows.slice(i, i + BATCH));
+    if (onProgress) onProgress(Math.min(i + BATCH, rows.length), rows.length);
+    await new Promise(r => setTimeout(r, 50));
+  }
+}
+
+/* ════════════════════════════════════
+   MODULE 4: SM-2 ALGORITHM
+════════════════════════════════════ */
+function sm2(card, q) {
+  let { interval, ef, reps, lapses } = card;
+  const efBefore = ef, intBefore = interval;
+  if (q === 0) { lapses++; interval = 1; reps = 0; ef = Math.max(1.3, ef - 0.2); }
+  else if (q === 1) { interval = reps === 0 ? 1 : Math.max(1, Math.round(interval * 1.2)); ef = Math.max(1.3, ef - 0.15); reps++; }
+  else if (q === 2) { interval = reps === 0 ? 1 : reps === 1 ? 4 : Math.round(interval * ef); ef = Math.max(1.3, ef + (0.1 - (3 - q) * (0.08 + (3 - q) * 0.02))); reps++; }
+  else { interval = reps === 0 ? 4 : reps === 1 ? 6 : Math.round(interval * ef * 1.3); ef += 0.1; reps++; }
+  interval = Math.min(interval, 365);
+  const due = new Date(Date.now() + interval * 86400000).toISOString();
+  const status = lapses >= 4 ? 'leech' : reps > 1 ? 'review' : 'learning';
+  return { ...card, interval, ef, reps, lapses, due, status,
+    total_reviews: (card.total_reviews || 0) + 1,
+    correct_reviews: (card.correct_reviews || 0) + (q > 0 ? 1 : 0),
+    last_review: new Date().toISOString(),
+    _efBefore: efBefore, _intBefore: intBefore };
+}
+
+/* ════════════════════════════════════
+   MODULE 5: NAVIGATION
+════════════════════════════════════ */
+const PAGE_TITLES = {
+  decks:'Decks', voc:'Vokabelliste', add:'Neue Karte',
+  browse:'Kartenbrowser', stats:'Statistiken', settings:'Einstellungen', review:'Wiederholung', challenge:'Daily Challenge'
+};
+
+function go(page) {
+  STATE.currentPage = page;
+  document.querySelectorAll('.ni').forEach(el => el.classList.remove('on'));
+  const el = document.getElementById('ni-' + page);
+  if (el) el.classList.add('on');
+  document.getElementById('page-title').textContent = PAGE_TITLES[page] || page;
+  Object.values(STATE.charts).forEach(c => { try { c.destroy(); } catch(_) {} });
+  STATE.charts = {};
+  const body = document.getElementById('page-body');
+  body.style.animation = 'none';
+  requestAnimationFrame(() => { body.style.animation = ''; body.className = 'page-anim'; renderPage(body); });
+  updateBadges();
+}
+
+function renderPage(b) {
+  // Show/hide FAB
+  const fab = document.getElementById('fab');
+  if (fab) fab.style.display = STATE.currentPage === 'review' ? 'none' : '';
+  if (STATE.currentPage === 'decks') renderDecks(b);
+  else if (STATE.currentPage === 'voc') renderVoc(b);
+  else if (STATE.currentPage === 'add') renderAdd(b);
+  else if (STATE.currentPage === 'browse') renderBrowse(b);
+  else if (STATE.currentPage === 'stats') renderStats(b);
+  else if (STATE.currentPage === 'settings') renderSettings(b);
+  else if (STATE.currentPage === 'review') renderReview(b);
+  else if (STATE.currentPage === 'challenge') renderChallenge(b);
+}
+
+function updateBadges() {
+  const n = getDue().length;
+  ['nb-due','nb-rev2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = n; el.style.display = n ? '' : 'none'; }
+  });
+  // Challenge badge
+  const cb = document.getElementById('nb-chal');
+  const today = new Date().toISOString().slice(0,10);
+  const chDone = STATE.settings['challenge_date'] === today;
+  if (cb) cb.style.display = chDone ? 'none' : '';
+}
+
+/* ════════════════════════════════════
+   MODULE 6: PAGE – DECKS
+════════════════════════════════════ */
+function renderDecks(b) {
+  const due = getDue().length;
+  const total = STATE.cards.length;
+  const revCards = STATE.cards.filter(c => c.total_reviews > 0);
+  const avgAcc = revCards.length ? Math.round(revCards.reduce((s,c) => s + c.correct_reviews/c.total_reviews, 0)/revCards.length*100) : 0;
+  const lch = STATE.cards.filter(c => c.status === 'leech').length;
+  const mature = STATE.cards.filter(c => c.interval >= 21).length;
+  const streak = parseInt(STATE.settings['streak']||'0');
+  const cloudActive = CLOUD_ENABLED.value;
+
+  b.innerHTML = `
+  <!-- HERO METRICS -->
+  <div class="g4 mb10">
+    <div class="mc" style="cursor:pointer" onclick="startReview()">
+      <div class="mv" style="color:var(--teal)">${due}</div>
+      <div class="ml">Heute fällig</div>
+      <div class="mch ${due>0?'dn':'up'}">${due>0?'⚡ Jetzt lernen!':'✓ Alles erledigt'}</div>
+    </div>
+    <div class="mc"><div class="mv">${total}</div><div class="ml">Karten gesamt</div><div class="mch nu">${getNew().length} neu · ${STATE.cards.filter(c=>c.status==='learning').length} aktiv</div></div>
+    <div class="mc"><div class="mv" style="color:var(--green)">${avgAcc}%</div><div class="ml">Ø Retention</div><div class="mch ${avgAcc>=70?'up':'dn'}">${avgAcc>=70?'↑ Gut':'↓ Üben'}</div></div>
+    <div class="mc"><div class="mv" style="color:var(--yellow)">${streak}</div><div class="ml">Streak 🔥</div><div class="mch nu">${mature} Karten reif</div></div>
+  </div>
+
+  <!-- CTA BANNER -->
+  ${due > 0 ? `<div style="background:linear-gradient(135deg,rgba(13,148,136,.14),rgba(45,212,191,.04));border:1px solid rgba(45,212,191,.2);border-radius:var(--rb);padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px">
+    <div style="font-size:28px">🎯</div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700;margin-bottom:3px">${due} Karte${due>1?'n':''} warten auf Wiederholung</div>
+      <div style="font-size:11px;color:var(--c3)">${STATE.cards.filter(c=>c.status==='new'&&new Date(c.due)<=new Date()).length} Neue · ${STATE.cards.filter(c=>c.status==='learning'&&new Date(c.due)<=new Date()).length} In Übung · ${lch} Leech</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button onclick="startReview()" class="btn" style="font-size:12px;padding:9px 18px">▶ Wiederholen</button>
+      <button onclick="go('challenge')" class="btn sec" style="font-size:12px;padding:9px 14px">⚡ Challenge</button>
+    </div>
+  </div>` : `<div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.18);border-radius:var(--rb);padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+    <div style="font-size:24px">🎉</div>
+    <div><div style="font-size:13px;font-weight:600;color:var(--green)">Alles für heute erledigt!</div>
+    <div style="font-size:11px;color:var(--c3)">Morgen kommen neue Karten. Challenge machen?</div></div>
+    <button onclick="go('challenge')" class="btn sec" style="margin-left:auto;font-size:12px;padding:8px 14px">⚡ Challenge</button>
+  </div>`}
+
+  <!-- DECKS + STREAK ──────────────── -->
+  <div class="g2 mb10">
+    <div class="card" style="margin-bottom:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="ct" style="margin-bottom:0">📦 Decks (${STATE.decks.length} Kapitel)</div>
+        <span style="font-size:10px;color:${cloudActive?'var(--green)':'var(--t3)'};display:flex;align-items:center;gap:4px">
+          <span style="width:6px;height:6px;border-radius:50%;background:${cloudActive?'var(--green)':'var(--t3)'}"></span>
+          ${cloudActive?'Cloud-Sync':'Offline'}
+        </span>
+      </div>
+      ${STATE.decks.map(d => {
+        const dc = STATE.cards.filter(c => c.deck_id === d.id);
+        const dn = dc.filter(c=>c.status==='new').length;
+        const dl = dc.filter(c=>c.status==='learning'&&new Date(c.due)<=new Date()).length;
+        const dr = dc.filter(c=>c.status==='review'&&new Date(c.due)<=new Date()).length;
+        const dd = dn+dl+dr;
+        const dPct = dc.length > 0 ? Math.round(dc.filter(c=>c.interval>=7).length/dc.length*100) : 0;
+        return `<div class="deck-row" onclick="startDeckReview('${d.id}')">
+          <div class="deck-icon" style="background:${d.color}">${d.icon}</div>
+          <div class="deck-info">
+            <div class="deck-name">${d.name}</div>
+            <div class="deck-sub">${d.description} · ${dc.length} Karten</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${dn>0?`<span class="dc new">${dn}</span>`:''}
+            ${dl>0?`<span class="dc lrn">${dl}</span>`:''}
+            ${dr>0?`<span class="dc rev">${dr}</span>`:''}
+            ${dd===0?`<span style="font-size:10px;color:var(--green)">✓</span>`:''}
+            <div style="width:28px;height:28px;flex-shrink:0">${buildProgressRing(dPct,28,'var(--teal)')}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="card" style="margin-bottom:0">
+      <div class="ct">📅 Aktivitätskalender (4 Wochen)</div>
+      <div style="display:flex;gap:4px;margin-bottom:6px">
+        ${['So','Mo','Di','Mi','Do','Fr','Sa'].map(d=>`<div style="flex:1;text-align:center;font-size:8px;color:var(--c5)">${d}</div>`).join('')}
+      </div>
+      ${buildStreakCalendar(28)}
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--c4)"><div class="sc-day sc-done" style="width:10px;height:10px;font-size:0"></div>Gelernt</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--c4)"><div class="sc-day sc-miss" style="width:10px;height:10px;font-size:0"></div>Verpasst</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--c4)"><div class="sc-day sc-today" style="width:10px;height:10px;font-size:0"></div>Heute</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW ──────────────── -->
+  <div class="g2">
+    <div class="card" style="margin-bottom:0">
+      <div class="ct">🔴 Schwächste Karten – Jetzt üben</div>
+      ${STATE.cards.filter(c=>c.lapses>0).sort((a,b)=>b.lapses-a.lapses).slice(0,4).map(c=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div class="row" style="gap:8px;min-width:0">
+          <span style="font-size:16px">${c.image||'📝'}</span>
+          <div style="min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--red);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.word||c.front.replace(/\{\{([^}]+)\}\}/g,'[$1]').slice(0,22)}</div>
+            <div style="font-size:10px;color:var(--c4)">${c.translation||c.back.slice(0,20)}</div>
+          </div>
+        </div>
+        <span class="badge" style="background:rgba(248,113,113,.12);color:var(--red);white-space:nowrap">${c.lapses}× Fehler</span>
+      </div>`).join('') || '<div style="font-size:12px;color:var(--c4)">Keine Fehler-Karten 🎉</div>'}
+      <button onclick="startReview()" class="btn" style="width:100%;padding:10px;margin-top:12px;font-size:12px">⚡ Challenge starten</button>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="ct">📋 Heutiger Plan</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(13,148,136,.07);border-radius:var(--ra);border-left:3px solid var(--t3);cursor:pointer" onclick="startReview()">
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">Wiederholung</div><div style="font-size:10px;color:var(--c4)">${due} Karten · SM-2 Algorithmus</div></div>
+          <span style="font-size:18px">${due>0?'📚':'✅'}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(251,146,60,.07);border-radius:var(--ra);border-left:3px solid var(--orange);cursor:pointer" onclick="go('challenge')">
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">Daily Challenge</div><div style="font-size:10px;color:var(--c4)">Präpositionen · Grammatik · Wendungen</div></div>
+          <span style="font-size:18px">⚡</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(96,165,250,.06);border-radius:var(--ra);border-left:3px solid var(--blue);cursor:pointer" onclick="go('add')">
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">Neue Karte</div><div style="font-size:10px;color:var(--c4)">Eigene Vokabeln hinzufügen</div></div>
+          <span style="font-size:18px">✏️</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+
+/* ════════════════════════════════════
+   MODULE 7: PAGE – VOCAB LIST
+════════════════════════════════════ */
+let vocFilter = '';
+function renderVoc(b) {
+  b.innerHTML = `
+  <div class="card mb10">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="ct" style="margin-bottom:0">📚 Vokabelliste – ${STATE.cards.length} Karten</div>
+      <div class="row" style="flex-wrap:wrap;gap:4px">
+        <span style="padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;border:1px solid var(--bd2);cursor:pointer;color:var(--c3)" onclick="filterVoc('',this)">Alle</span>
+        ${STATE.decks.map(d=>`<span style="padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;border:1px solid var(--bd2);cursor:pointer;color:var(--c2);background:${d.color}" onclick="filterVoc('${d.id}',this)">${d.icon}</span>`).join('')}
+      </div>
+    </div>
+    <input class="fi" id="voc-search" placeholder="🔍 Suchen..." oninput="filterVocSearch(this.value)" style="margin-bottom:12px">
+    <div id="voc-grid" class="voc-grid"></div>
+  </div>`;
+  renderVocGrid();
+}
+function filterVoc(deck, el) { vocFilter = deck; renderVocGrid(); }
+function filterVocSearch(q) {
+  const sq = q.toLowerCase();
+  document.querySelectorAll('.vc').forEach(card => {
+    const show = !sq || (card.dataset.w||'').includes(sq) || (card.dataset.t||'').includes(sq);
+    card.style.display = show ? '' : 'none';
+  });
+}
+function renderVocGrid() {
+  const grid = document.getElementById('voc-grid'); if (!grid) return;
+  const list = STATE.cards.filter(c => !vocFilter || c.deck_id === vocFilter);
+  if (!list.length) { grid.innerHTML = `<div style="color:var(--c4);font-size:12px;grid-column:span 3">Keine Karten in diesem Deck.</div>`; return; }
+  const stColor = {new:'var(--blue)',learning:'var(--orange)',review:'var(--green)',leech:'var(--red)'};
+  grid.innerHTML = list.map(c => `
+  <div class="vc" data-w="${(c.word||'').toLowerCase()}" data-t="${(c.translation||'').toLowerCase()}" onclick="openEdit('${c.id}')">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+      <div class="vc-w">${c.image} ${c.word || c.front.slice(0,20)}</div>
+      <div style="width:6px;height:6px;border-radius:50%;background:${stColor[c.status]||'var(--c4)'};flex-shrink:0"></div>
+    </div>
+    <div class="vc-t">${c.translation || c.back.slice(0,30)}</div>
+    <div class="vc-tag">${(c.tags||[]).slice(0,2).join(' · ')}</div>
+  </div>`).join('');
+}
+
+/* ════════════════════════════════════
+   MODULE 8: PAGE – ADD CARD
+════════════════════════════════════ */
+function renderAdd(b) {
+  b.innerHTML = `<div class="g2">
+  <div>
+    <div class="card">
+      <div class="ct">✏️ Neue Karte erstellen</div>
+      <div class="fr"><label class="fl">Deck</label>
+        <select class="fi" id="f-deck">${STATE.decks.map(d=>`<option value="${d.id}">${d.icon} ${d.name}</option>`).join('')}</select></div>
+      <div class="fr"><label class="fl">Typ</label>
+        <select class="fi" id="f-type"><option value="cloze">Lückentext (Cloze)</option><option value="sentence">Satz-Karte</option><option value="image">Bild + Satz</option></select></div>
+      <div class="fr"><label class="fl">Vorderseite (mit {{Lücke}})</label>
+        <textarea class="fi" id="f-front" rows="3" placeholder="Ich {{warte}} auf dich." oninput="updatePreview()"></textarea></div>
+      <div class="fr"><label class="fl">Rückseite (Farsi)</label>
+        <textarea class="fi" id="f-back" rows="2" placeholder="ترجمه فارسی..." oninput="updatePreview()"></textarea></div>
+      <div class="fr"><label class="fl">Grammatik-Hinweis</label>
+        <textarea class="fi" id="f-gram" rows="2" placeholder="warten auf + Akkusativ"></textarea></div>
+      <div class="fr"><label class="fl">Deutsches Wort (Schlüsselwort)</label>
+        <input class="fi" id="f-word" placeholder="z.B.: warten auf"></div>
+      <div class="fr"><label class="fl">Emoji</label>
+        <input class="fi" id="f-emoji" value="📝" maxlength="4" oninput="updatePreview()"></div>
+      <div class="fr"><label class="fl">Tags (kommagetrennt)</label>
+        <input class="fi" id="f-tags" placeholder="Verb, Präp, Akk"></div>
+      <button onclick="doSaveCard()" class="btn" id="save-card-btn" style="width:100%;padding:12px">💾 Karte speichern</button>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <div class="ct">👁️ Live-Vorschau</div>
+      <div style="background:var(--s2);border:1px solid var(--bd2);border-radius:var(--rb);padding:18px;text-align:center;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+        <div id="pv-em" style="font-size:44px">📝</div>
+        <div id="pv-sent" style="font-size:16px;font-weight:600;line-height:1.6;color:var(--c1)">Satz eingeben...</div>
+        <div id="pv-trans" style="font-size:12px;color:var(--c3)">ترجمه اینجا</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="ct">📥 Import / Export</div>
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <button onclick="doExport()" class="btn sec" style="flex:1">📤 Export JSON</button>
+        <button onclick="document.getElementById('importModal').classList.add('on')" class="btn sec" style="flex:1">📥 Import JSON</button>
+      </div>
+    </div>
+  </div>
+  </div>`;
+}
+
+function updatePreview() {
+  const f = (document.getElementById('f-front')||{}).value||'';
+  const bk = (document.getElementById('f-back')||{}).value||'';
+  const em = (document.getElementById('f-emoji')||{}).value||'📝';
+  const pem = document.getElementById('pv-em'), ps = document.getElementById('pv-sent'), pt = document.getElementById('pv-trans');
+  if (pem) pem.textContent = em;
+  if (ps) ps.innerHTML = f.replace(/\{\{([^}]+)\}\}/g,'<span style="color:var(--teal);border-bottom:2px solid var(--teal);padding:0 3px">$1</span>') || 'Satz eingeben...';
+  if (pt) pt.textContent = bk || 'ترجمه اینجا';
+}
+
+async function doSaveCard() {
+  const front = (document.getElementById('f-front')||{}).value.trim();
+  const back = (document.getElementById('f-back')||{}).value.trim();
+  if (!front || !back) { toast('Vorder- und Rückseite sind Pflicht!', 'bad'); return; }
+  const tags = ((document.getElementById('f-tags')||{}).value||'').split(',').map(t=>t.trim()).filter(Boolean);
+  const word = ((document.getElementById('f-word')||{}).value||'').trim();
+  // extract word from {{...}} if not set manually
+  const autoWord = word || (front.match(/\{\{([^}]+)\}\}/)?.[1] || '');
+  const card = {
+    deck_id: (document.getElementById('f-deck')||{}).value || STATE.decks[0]?.id || 'job',
+    type: (document.getElementById('f-type')||{}).value || 'cloze',
+    front, back, grammar: (document.getElementById('f-gram')||{}).value.trim(),
+    image: (document.getElementById('f-emoji')||{}).value||'📝',
+    tags, word: autoWord, translation: back,
+    interval: 1, ef: 2.5, reps: 0, lapses: 0,
+    due: new Date().toISOString(), status: 'new',
+    total_reviews: 0, correct_reviews: 0,
+  };
+  const btn = document.getElementById('save-card-btn');
+  if (btn) btn.disabled = true;
+  const saved = await saveCardToDB(card);
+  if (btn) btn.disabled = false;
+  if (saved) {
+    toast('✅ Karte gespeichert!', 'ok');
+    ['f-front','f-back','f-gram','f-word','f-tags'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    updatePreview();
+  }
+}
+
+function doExport() {
+  const json = JSON.stringify(STATE.cards.map(c => ({
+    deck_id:c.deck_id, type:c.type, front:c.front, back:c.back,
+    grammar:c.grammar, image:c.image, tags:c.tags, word:c.word, translation:c.translation
+  })), null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='anki_cards_export.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('📤 Export abgeschlossen!', 'ok');
+}
+
+async function doImport() {
+  try {
+    const raw = (document.getElementById('import-json')||{}).value.trim();
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) throw new Error('Kein Array');
+    const count = await importCardsFromJSON(arr);
+    toast(`✅ ${count} Karten importiert!`, 'ok');
+    document.getElementById('importModal').classList.remove('on');
+    go('decks');
+  } catch(e) { toast('JSON-Fehler: ' + e.message, 'bad'); }
+}
+
+/* ════════════════════════════════════
+   MODULE 9: REVIEW ENGINE
+════════════════════════════════════ */
+function buildQueue(deckId = null) {
+  const now = new Date();
+  let cards = deckId ? STATE.cards.filter(c => c.deck_id === deckId) : STATE.cards;
+  const lrn = cards.filter(c => c.status === 'learning' && new Date(c.due) <= now);
+  const rev = cards.filter(c => c.status === 'review' && new Date(c.due) <= now);
+  const nw = cards.filter(c => c.status === 'new').slice(0, CONFIG.NEW_CARDS_PER_DAY);
+  STATE.reviewQueue = [...lrn, ...rev, ...nw].filter(c => c.status !== 'leech');
+  STATE.reviewIdx = 0; STATE.revShown = false;
+  STATE.session = { correct: 0, wrong: 0, done: 0 };
+}
+
+function startReview() { buildQueue(); if (!STATE.reviewQueue.length) { toast('Nichts zu wiederholen!', 'ok'); return; } go('review'); }
+function startDeckReview(deck) { buildQueue(deck); if (!STATE.reviewQueue.length) { toast('Deck erledigt! ✓', 'ok'); return; } go('review'); }
+
+let _kbHandler = null;
+function renderReview(b) {
+  if (_kbHandler) { document.removeEventListener('keydown', _kbHandler); _kbHandler = null; }
+  if (!STATE.reviewQueue.length || STATE.reviewIdx >= STATE.reviewQueue.length) { renderDone(b); return; }
+
+  const card = STATE.reviewQueue[STATE.reviewIdx];
+  const prog = Math.round(STATE.reviewIdx / STATE.reviewQueue.length * 100);
+  const cloze = parseCloze(card.front);
+
+  b.innerHTML = ''; b.style.padding = '0';
+  const wrap = document.createElement('div');
+  wrap.className = 'rev-wrap';
+  wrap.innerHTML = `
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div class="row" style="gap:10px">
+      <span style="font-size:11px;color:var(--green)">✓ ${STATE.session.correct}</span>
+      <span style="font-size:11px;color:var(--red)">✗ ${STATE.session.wrong}</span>
+      <span style="font-size:11px;color:var(--c4)">${STATE.reviewIdx+1}/${STATE.reviewQueue.length}</span>
+    </div>
+    <div class="row">
+      ${(card.tags||[]).slice(0,2).map(t=>`<span class="badge" style="background:var(--s3);color:var(--c4);font-size:9px">${t}</span>`).join('')}
+      <button onclick="go('decks')" class="btn sec" style="font-size:10px;padding:4px 9px">✕</button>
+    </div>
+  </div>
+  <div class="rev-prog"><div class="rev-prog-fill" style="width:${prog}%"></div></div>
+
+  <div class="flip-scene" id="flip-scene" onclick="if(!STATE.revShown)showAnswer()">
+    <div class="flip-card" id="flip-card">
+      <div class="fc-face fc-front">
+        <div class="fc-hd">
+          <span class="fc-type">${{sentence:'Satz',cloze:'Lückentext',image:'Bild'}[card.type]||'Karte'}</span>
+          <div class="fc-tags">${(card.tags||[]).map(t=>`<span class="fc-tag">${t}</span>`).join('')}</div>
+        </div>
+        <div class="fc-body">
+          <div class="fc-em">${card.image||'📝'}</div>
+          <div class="fc-sent">${cloze.front}</div>
+          <div class="fc-hint">Ergänze das fehlende Wort</div>
+        </div>
+        <div class="fc-ft">Klicken · Leertaste</div>
+      </div>
+      <div class="fc-face fc-back">
+        <div class="fc-hd">
+          <span class="fc-type" style="color:var(--teal)">Antwort</span>
+          <div style="font-size:10px;color:var(--c5)" class="mono">EF ${(card.ef||2.5).toFixed(1)} · ${card.interval||1}d</div>
+        </div>
+        <div class="fc-body">
+          <div class="fc-em" style="font-size:40px">${card.image||'📝'}</div>
+          <div class="fc-sent">${cloze.back}</div>
+          <div class="fc-trans">${card.back}</div>
+          <div class="fc-gram">${card.grammar||''}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="flip-hint" style="text-align:center;font-size:11px;color:var(--c5);flex-shrink:0">
+    👆 Klicken oder <kbd style="background:var(--s4);border:1px solid var(--bd2);padding:1px 6px;border-radius:3px;font-size:9px">Space</kbd>
+  </div>
+
+  <div id="ans-row" style="display:none">
+    <div class="ans-row">
+      <button class="ans again" onclick="doAnswer(0)">Nochmal<span class="ai">&lt;1m</span></button>
+      <button class="ans hard" onclick="doAnswer(1)">Schwer<span class="ai">~${Math.max(1,Math.round((card.interval||1)*1.2))}d</span></button>
+      <button class="ans good" onclick="doAnswer(2)">Gut<span class="ai">${(card.reps||0)<2?1:Math.round((card.interval||1)*(card.ef||2.5))}d</span></button>
+      <button class="ans easy" onclick="doAnswer(3)">Einfach<span class="ai">${(card.reps||0)<2?4:Math.round((card.interval||1)*(card.ef||2.5)*1.3)}d</span></button>
+    </div>
+  </div>`;
+
+  b.appendChild(wrap);
+  _kbHandler = (e) => {
+    if (e.code === 'Space') { e.preventDefault(); if (!STATE.revShown) showAnswer(); }
+    else if (e.key === '1' && STATE.revShown) doAnswer(0);
+    else if (e.key === '2' && STATE.revShown) doAnswer(1);
+    else if (e.key === '3' && STATE.revShown) doAnswer(2);
+    else if (e.key === '4' && STATE.revShown) doAnswer(3);
+  };
+  document.addEventListener('keydown', _kbHandler);
+}
+
+function parseCloze(text) {
+  const front = text.replace(/\{\{([^}]+)\}\}/g, '<span class="blank">$1</span>');
+  const back = text.replace(/\{\{([^}]+)\}\}/g, '<span class="cloze">$1</span>');
+  return { front, back };
+}
+
+function showAnswer() {
+  if (STATE.revShown) return;
+  STATE.revShown = true;
+  document.getElementById('flip-card').classList.add('flipped');
+  document.getElementById('flip-hint').style.display = 'none';
+  const ar = document.getElementById('ans-row');
+  if (ar) { ar.style.display = 'block'; ar.style.animation = 'pi .2s ease'; }
+  playBeep(null);
+}
+
+async function doAnswer(q) {
+  if (!STATE.revShown) { showAnswer(); return; }
+  if (_kbHandler) { document.removeEventListener('keydown', _kbHandler); _kbHandler = null; }
+  const card = STATE.reviewQueue[STATE.reviewIdx];
+  const updated = sm2(card, q);
+  // Log to DB (fire and forget)
+  logReview(card, q, q > 0, updated._efBefore, updated.ef, updated._intBefore, updated.interval);
+  // Update card in DB
+  await updateCardInDB(updated);
+  if (q === 0) STATE.session.wrong++; else STATE.session.correct++;
+  STATE.session.done++;
+  STATE.reviewIdx++;
+  STATE.revShown = false;
+  lsSaveCards(); // persist after each answer
+  document.getElementById('page-body').style.padding = '0';
+  renderReview(document.getElementById('page-body'));
+  playBeep(q > 0);
+  if (STATE.session.done === 1) await updateStreak();
+}
+
+function renderDone(b) {
+  if (_kbHandler) { document.removeEventListener('keydown', _kbHandler); _kbHandler = null; }
+  const { correct, wrong, done } = STATE.session;
+  const acc = done ? Math.round(correct / done * 100) : 0;
+  b.style.padding = '20px 22px';
+  b.innerHTML = `<div class="done-wrap">
+    <div style="font-size:52px">${acc >= 80 ? '🎉' : acc >= 60 ? '👍' : '💪'}</div>
+    <div style="font-size:24px;font-weight:800;letter-spacing:-0.5px">Session abgeschlossen!</div>
+    <div style="font-size:13px;color:var(--c3);max-width:360px;line-height:1.7">${done} Karten wiederholt · Daten in Supabase gespeichert ☁️</div>
+    <div class="done-stats">
+      <div class="ds"><div class="ds-v" style="color:var(--green)">${correct}</div><div class="ds-l">Richtig</div></div>
+      <div class="ds"><div class="ds-v" style="color:var(--red)">${wrong}</div><div class="ds-l">Falsch</div></div>
+      <div class="ds"><div class="ds-v" style="color:var(--teal)">${acc}%</div><div class="ds-l">Retention</div></div>
+    </div>
+    <div class="row" style="gap:10px">
+      <button onclick="go('decks')" class="btn" style="padding:11px 22px">← Decks</button>
+      <button onclick="startReview()" class="btn sec" style="padding:11px 22px">⟳ Nochmal</button>
+    </div>
+  </div>`;
+}
+
+/* ════════════════════════════════════
+   MODULE 10: PAGE – BROWSE
+════════════════════════════════════ */
+function renderBrowse(b) {
+  b.innerHTML = `<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div class="ct" style="margin-bottom:0">🗂️ Browser – ${STATE.cards.length} Karten</div>
+    <div class="row" style="flex-wrap:wrap;gap:6px">
+      <select class="fi" id="f-dk" onchange="renderBrowseRows()" style="width:140px;padding:6px 10px">
+        <option value="">Alle Decks</option>${STATE.decks.map(d=>`<option value="${d.id}">${d.name.split(' ')[0]}</option>`).join('')}
+      </select>
+      <select class="fi" id="f-st" onchange="renderBrowseRows()" style="width:130px;padding:6px 10px">
+        <option value="">Alle Status</option>
+        <option value="new">Neu</option><option value="learning">Übung</option>
+        <option value="review">Wiederholen</option><option value="leech">Leech</option>
+      </select>
+      <input class="fi" id="f-sq" placeholder="Suchen..." oninput="renderBrowseRows()" style="width:130px;padding:6px 10px">
+    </div>
+  </div>
+  <div style="overflow-x:auto;max-height:calc(100vh - 240px);overflow-y:auto">
+    <table class="btable">
+      <thead><tr><th>Wort</th><th>Deutsch</th><th>Farsi</th><th>Status</th><th>EF</th><th>Fällig</th><th></th></tr></thead>
+      <tbody id="browse-rows"></tbody>
+    </table>
+  </div>
+  </div>`;
+  renderBrowseRows();
+}
+
+function renderBrowseRows() {
+  const dk = (document.getElementById('f-dk')||{}).value||'';
+  const st = (document.getElementById('f-st')||{}).value||'';
+  const sq = ((document.getElementById('f-sq')||{}).value||'').toLowerCase();
+  const rows = document.getElementById('browse-rows'); if (!rows) return;
+  const filtered = STATE.cards.filter(c => {
+    if (dk && c.deck_id !== dk) return false;
+    if (st && c.status !== st) return false;
+    if (sq && !(c.word||'').toLowerCase().includes(sq) && !(c.translation||'').toLowerCase().includes(sq) && !c.front.toLowerCase().includes(sq)) return false;
+    return true;
+  });
+  if (!filtered.length) { rows.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--c4)">Keine Karten</td></tr>`; return; }
+  rows.innerHTML = filtered.map(c => {
+    const dueDate = new Date(c.due);
+    const due = dueDate <= new Date() ? `<span style="color:var(--red)">Jetzt</span>` : `<span style="color:var(--c4)">${Math.ceil((dueDate-Date.now())/86400000)}d</span>`;
+    const spill = {new:'sn',learning:'sl',review:'sr',leech:'sch'}[c.status]||'sn';
+    return `<tr>
+      <td>${c.image||'📝'}</td>
+      <td title="${c.front}">${(c.word||c.front.replace(/\{\{([^}]+)\}\}/g,'$1')).slice(0,28)}</td>
+      <td style="color:var(--c3)">${(c.translation||c.back).slice(0,24)}</td>
+      <td><span class="spill ${spill}">${{new:'Neu',learning:'Übung',review:'Wdh.',leech:'Leech'}[c.status]||c.status}</span></td>
+      <td class="mono" style="color:${c.ef>=2.5?'var(--green)':c.ef>=2?'var(--orange)':'var(--red)'}">${(c.ef||2.5).toFixed(1)}</td>
+      <td>${due}</td>
+      <td><button onclick="openEdit('${c.id}')" class="btn sec" style="padding:3px 8px;font-size:9px">✏️</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════
+   MODULE 11: PAGE – STATS (mit echten DB-Daten)
+════════════════════════════════════ */
+async function renderStats(b) {
+  // Load fresh log data
+  await loadReviewLog();
+  const total = STATE.cards.length;
+  const revCards = STATE.cards.filter(c => c.total_reviews > 0);
+  const acc = revCards.length ? Math.round(revCards.reduce((s,c)=>s+c.correct_reviews/c.total_reviews,0)/revCards.length*100) : 0;
+  const mature = STATE.cards.filter(c => c.interval >= 21).length;
+  const lch = STATE.cards.filter(c => c.status === 'leech').length;
+  const hm = Array.from({length:182},(_,i)=>{const r=Math.random(),v=r>.55?0:r>.4?1:r>.3?2:r>.2?3:r>.1?4:5;return`<div class="hc h${v}"></div>`}).join('');
+
+  b.innerHTML = `
+  <div class="g5 mb10">
+    <div class="mc"><div class="mv" style="color:var(--teal)">${acc}%</div><div class="ml">Retention ☁️</div></div>
+    <div class="mc"><div class="mv">${total}</div><div class="ml">Karten</div></div>
+    <div class="mc"><div class="mv" style="color:var(--green)">${mature}</div><div class="ml">Reif ≥21d</div></div>
+    <div class="mc"><div class="mv" style="color:var(--yellow)">${STATE.settings['streak']||0}</div><div class="ml">Streak</div></div>
+    <div class="mc"><div class="mv" style="color:${lch>0?'var(--red)':'var(--c4)'}">${lch}</div><div class="ml">Leech</div></div>
+  </div>
+  <div class="g2 mb10">
+    <div class="card" style="margin-bottom:0">
+      <div class="ct">📈 Reviews (30 Tage) – aus Supabase ☁️</div>
+      <div class="cw h200"><canvas id="cline" role="img" aria-label="Reviews">Daten</canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="ct">🎯 Karten pro Deck</div>
+      <div class="cw h200"><canvas id="cdeck" role="img" aria-label="Decks">Daten</canvas></div>
+    </div>
+  </div>
+  <div class="card mb10">
+    <div class="ct">🔥 Lernaktivität – 6 Monate</div>
+    <div class="heatmap">${hm}</div>
+    <div class="row mt8" style="gap:5px;font-size:9px;color:var(--c5)">Weniger ${[0,1,2,3,4,5].map(v=>`<div class="hc h${v}" style="width:10px;height:10px;flex-shrink:0"></div>`).join('')} Mehr</div>
+  </div>
+  <div class="g2">
+    <div class="card" style="margin-bottom:0">
+      <div class="ct">🏆 Skill-Level (EF-Analyse)</div>
+      ${STATE.decks.map(d => {
+        const dc = STATE.cards.filter(c=>c.deck_id===d.id&&c.total_reviews>0);
+        const ef = dc.length ? dc.reduce((s,c)=>s+c.ef,0)/dc.length : 2.5;
+        const pct = Math.round((ef-1.3)/(3.5-1.3)*100);
+        return `<div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+            <span style="color:var(--c2)">${d.icon} ${d.name.split('&')[0].trim()}</span>
+            <span style="font-weight:700;color:${pct>70?'var(--green)':pct>40?'var(--yellow)':'var(--red)'}">${pct}%</span>
+          </div>
+          <div class="sk-bar"><div class="sk-fill" style="width:${pct}%;background:${pct>70?'var(--green)':pct>40?'var(--yellow)':'var(--red)'}"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="ct">💪 Schwächste Karten</div>
+      ${[...STATE.cards].sort((a,b)=>a.ef-b.ef).slice(0,6).map(c=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="font-size:18px">${c.image||'📝'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.word||c.front.slice(0,30)}</div>
+          <div style="font-size:9px;color:var(--c4)">${c.lapses} Fehler · EF: ${(c.ef||2.5).toFixed(1)}</div>
+        </div>
+        <button onclick="openEdit('${c.id}')" class="btn sec" style="font-size:9px;padding:3px 7px">✏️</button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  setTimeout(() => {
+    const gc = 'rgba(255,255,255,.04)';
+    const cl = document.getElementById('cline'), cd = document.getElementById('cdeck');
+    // Use real data from STATE.reviewLog
+    const last30 = Array.from({length:30}, (_, i) => {
+      const d = new Date(Date.now() - (29-i)*86400000).toISOString().slice(0,10);
+      const entry = STATE.reviewLog.find(r => r.day && r.day.slice(0,10) === d);
+      return { correct: entry?.correct || 0, incorrect: entry?.incorrect || 0 };
+    });
+    if (cl) STATE.charts.l = new Chart(cl, {type:'bar', data:{
+      labels: Array.from({length:30},(_,i)=>i%5===0?'T'+(i+1):''),
+      datasets:[
+        {label:'Richtig', data:last30.map(d=>d.correct), backgroundColor:'rgba(74,222,128,.4)', borderRadius:3, stack:'s'},
+        {label:'Falsch', data:last30.map(d=>d.incorrect), backgroundColor:'rgba(248,113,113,.4)', borderRadius:3, stack:'s'}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:gc},ticks:{color:'#475569',font:{size:9}},stacked:true},y:{grid:{color:gc},ticks:{color:'#475569',font:{size:9}},stacked:true}}}});
+    if (cd) STATE.charts.d = new Chart(cd, {type:'bar', data:{
+      labels: STATE.decks.map(d=>d.icon+' '+d.name.split(' ')[0]),
+      datasets:[{data:STATE.decks.map(d=>STATE.cards.filter(c=>c.deck_id===d.id).length),
+        backgroundColor:['rgba(96,165,250,.6)','rgba(45,212,191,.6)','rgba(167,139,250,.6)','rgba(251,146,60,.6)','rgba(244,114,182,.6)','rgba(74,222,128,.6)','rgba(250,204,21,.6)'],
+        borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},indexAxis:'y',
+        scales:{x:{grid:{color:gc},ticks:{color:'#475569',font:{size:10}}},y:{grid:{color:'none'},ticks:{color:'#64748b',font:{size:10}}}}}});
+  }, 80);
+}
+
+/* ════════════════════════════════════
+   MODULE 12: PAGE – SETTINGS
+════════════════════════════════════ */
+function renderSettings(b) {
+  const savedKey = LS('sb_api_key') || '';
+  const keyDisplay = savedKey ? savedKey.slice(0,14) + '...' + savedKey.slice(-6) : 'Nicht gesetzt';
+  b.innerHTML = `
+  <div class="g2">
+    <div class="card">
+      <div class="ct">🔑 API Key & Cloud-Sync</div>
+      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:var(--ra);padding:11px 13px;font-size:11px;color:var(--c3);margin-bottom:12px;line-height:1.8">
+        <div>Status: <span style="color:${CLOUD_ENABLED.value?'var(--green)':'var(--red);'}">${CLOUD_ENABLED.value?'☁️ Cloud aktiv':'📱 Offline-Modus'}</span></div>
+        <div>Key: <span style="font-family:monospace;color:var(--c4)">${keyDisplay}</span></div>
+        <div>URL: <span style="color:var(--c5);font-family:monospace;font-size:10px">${CONFIG.SUPABASE_URL}</span></div>
+      </div>
+      <div class="fr"><label class="fl">Neuer API Key (eyJ...)</label>
+        <textarea class="fi" id="set-key" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="font-family:monospace;font-size:11px;resize:none">${savedKey}</textarea></div>
+      <button onclick="changeKey()" class="btn" style="width:100%;padding:10px">🔗 Key speichern & neu verbinden</button>
+    </div>
+    <div class="card">
+      <div class="ct">📊 Lerneinstellungen</div>
+      <div class="fr"><label class="fl">Neue Karten pro Tag</label>
+        <input class="fi" id="set-new" type="number" value="${STATE.settings['new_cards_per_day']||20}" min="1" max="200"></div>
+      <div class="fr"><label class="fl">Max Reviews pro Tag</label>
+        <input class="fi" id="set-rev" type="number" value="${STATE.settings['max_reviews_per_day']||100}" min="10" max="500"></div>
+      <button onclick="saveSettings()" class="btn" style="width:100%;padding:10px">💾 Speichern</button>
+    </div>
+  </div>
+  <div class="card mt8">
+    <div class="ct">🗄️ Daten-Management</div>
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+      <button onclick="doExport()" class="btn sec">📤 Export JSON</button>
+      <button onclick="document.getElementById('importModal').classList.add('on')" class="btn sec">📥 Import JSON</button>
+      <button onclick="resetAllProgress()" class="btn danger">↺ Fortschritt Reset</button>
+      <button onclick="LSdel('sb_api_key');location.reload()" class="btn danger">🗑️ Key löschen</button>
+    </div>
+  </div>`;
+}
+
+/* ════════════════════════════════════
+   MODULE 13: EDIT MODAL
+════════════════════════════════════ */
+let _editId = null;
+function openEdit(id) {
+  const card = getCard(id); if (!card) return;
+  _editId = id;
+  document.getElementById('edit-body').innerHTML = `
+  <div class="fr"><label class="fl">Vorderseite</label><textarea class="fi" id="e-f" rows="3">${card.front}</textarea></div>
+  <div class="fr"><label class="fl">Rückseite (Farsi)</label><textarea class="fi" id="e-b" rows="2">${card.back}</textarea></div>
+  <div class="fr"><label class="fl">Grammatik</label><textarea class="fi" id="e-g" rows="2">${card.grammar||''}</textarea></div>
+  <div class="fr"><label class="fl">Wort</label><input class="fi" id="e-w" value="${card.word||''}"></div>
+  <div class="fr"><label class="fl">Emoji</label><input class="fi" id="e-em" value="${card.image||'📝'}" maxlength="4"></div>
+  <div class="row mt8">
+    <button onclick="doSaveEdit()" class="btn" style="flex:1">💾 Speichern</button>
+    <button onclick="doDeleteCard('${id}')" class="btn danger">🗑️</button>
+    <button onclick="doResetCard('${id}')" class="btn sec">↺ Reset</button>
+  </div>`;
+  document.getElementById('editModal').classList.add('on');
+}
+function closeEdit() { document.getElementById('editModal').classList.remove('on'); _editId = null; }
+
+async function doSaveEdit() {
+  if (!_editId) return;
+  const fields = {
+    front: document.getElementById('e-f')?.value.trim() || '',
+    back: document.getElementById('e-b')?.value.trim() || '',
+    grammar: document.getElementById('e-g')?.value.trim() || '',
+    word: document.getElementById('e-w')?.value.trim() || '',
+    translation: document.getElementById('e-b')?.value.trim() || '',
+    image: document.getElementById('e-em')?.value || '📝',
+  };
+  await updateCardFields(_editId, fields);
+  closeEdit();
+  toast('Gespeichert! ☁️', 'ok');
+  if (STATE.currentPage === 'browse') renderBrowseRows();
+  if (STATE.currentPage === 'voc') renderVocGrid();
+}
+
+async function doDeleteCard(id) {
+  if (!confirm('Karte wirklich löschen?')) return;
+  const ok = await deleteCardFromDB(id);
+  if (ok) { closeEdit(); toast('Gelöscht', 'bad'); if (STATE.currentPage === 'browse') renderBrowseRows(); updateBadges(); }
+}
+
+async function doResetCard(id) {
+  await updateCardFields(id, { interval:1, ef:2.5, reps:0, lapses:0, status:'new', total_reviews:0, correct_reviews:0, due:new Date().toISOString(), last_review:null });
+  closeEdit(); toast('Zurückgesetzt', 'ok');
+}
+
+/* ════════════════════════════════════
+   MODULE 14: AUDIO
+════════════════════════════════════ */
+let _ac = null;
+function playBeep(ok) {
+  try {
+    if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+    const o = _ac.createOscillator(), g = _ac.createGain();
+    o.connect(g); g.connect(_ac.destination);
+    o.frequency.value = ok === null ? 600 : ok ? 880 : 220;
+    o.type = ok === false ? 'sawtooth' : 'sine';
+    g.gain.setValueAtTime(.07, _ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, _ac.currentTime + .2);
+    o.start(); o.stop(_ac.currentTime + .2);
+  } catch(e) {}
+}
+
+/* ════════════════════════════════════
+   MODULE 15: TOAST
+════════════════════════════════════ */
+let _tt = null;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast ' + type + ' on';
+  clearTimeout(_tt); _tt = setTimeout(() => el.className = 'toast', 2800);
+}
+
+/* ════════════════════════════════════
+   MODULE NEW-A: DAILY CHALLENGE PAGE
+════════════════════════════════════ */
+const CHALLENGE_QUESTIONS = [
+  {q:'Ich warte ___ dich seit einer Stunde.', opts:['auf','an','in','von'], ans:0, hint:'<strong>warten auf</strong> + Akkusativ', type:'Präpositionen'},
+  {q:'Er denkt oft ___ seine Heimat in Teheran.', opts:['über','an','auf','bei'], ans:1, hint:'<strong>denken an</strong> + Akkusativ', type:'Präpositionen'},
+  {q:'Sie träumt ___ einem langen Urlaub.', opts:['von','über','auf','mit'], ans:0, hint:'<strong>träumen von</strong> + Dativ', type:'Präpositionen'},
+  {q:'Wir sprechen ___ das Problem.', opts:['mit','an','über','von'], ans:2, hint:'<strong>sprechen über</strong> + Akkusativ', type:'Präpositionen'},
+  {q:'Er leidet sehr ___ dem Lärm.', opts:['für','an','unter','mit'], ans:2, hint:'<strong>leiden unter</strong> + Dativ', type:'Präpositionen'},
+  {q:'Die Studenten freuen sich ___ die Ferien.', opts:['auf','an','über','von'], ans:0, hint:'<strong>sich freuen auf</strong> = Vorfreude (آینده)', type:'Reflexiv'},
+  {q:'Sie arbeitet seit Jahren ___ ihrer Doktorarbeit.', opts:['für','an','über','in'], ans:1, hint:'<strong>arbeiten an</strong> + Dativ', type:'Präpositionen'},
+  {q:'Das Kind leidet ___ der Trennung seiner Eltern.', opts:['wegen','unter','über','an'], ans:1, hint:'<strong>leiden unter</strong> + Dativ = رنج بردن از', type:'Präpositionen'},
+  {q:'Er beharrt ___ seinem Standpunkt.', opts:['auf','an','in','von'], ans:0, hint:'<strong>beharren auf</strong> + Dativ = پافشاری کردن', type:'Präpositionen'},
+  {q:'Können wir ___ vier Augen reden?', opts:['zu','unter','mit','von'], ans:1, hint:'<strong>unter vier Augen</strong> = خصوصی', type:'Wendungen'},
+];
+
+let CH_IDX = 0, CH_CORRECT = 0, CH_WRONG = 0, CH_CHOSEN = null;
+
+function renderChallenge(b) {
+  const done_today = parseInt(STATE.settings['challenge_today'] || '0');
+  const today = new Date().toISOString().slice(0,10);
+  const last_ch = STATE.settings['challenge_date'] || '';
+  const today_count = last_ch === today ? done_today : 0;
+
+  const q = CHALLENGE_QUESTIONS[CH_IDX % CHALLENGE_QUESTIONS.length];
+  const total = CHALLENGE_QUESTIONS.length;
+  const pct = Math.round(CH_IDX / total * 100);
+
+  b.innerHTML = `
+  <div class="g3 mb10">
+    <div class="mc"><div class="mv" style="color:var(--green)">${CH_CORRECT}</div><div class="ml">Richtig heute</div></div>
+    <div class="mc"><div class="mv" style="color:var(--red)">${CH_WRONG}</div><div class="ml">Falsch heute</div></div>
+    <div class="mc"><div class="mv" style="color:var(--teal)">${CH_CORRECT + CH_WRONG > 0 ? Math.round(CH_CORRECT/(CH_CORRECT+CH_WRONG)*100) : 0}%</div><div class="ml">Genauigkeit</div></div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,rgba(13,148,136,.12),rgba(45,212,191,.04));border:1px solid rgba(45,212,191,.15);border-radius:var(--rc);padding:22px 24px;margin-bottom:10px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(45,212,191,.07),transparent 70%)"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:1.5px;font-weight:700">${q.type}</div>
+        <div style="font-size:11px;color:var(--c4);margin-top:2px">فراق ${CH_IDX % total + 1} از ${total}</div>
+      </div>
+      <div style="display:flex;gap:3px">${Array.from({length:total},(_,i) => `<div style="width:${i===CH_IDX%total?16:6}px;height:6px;border-radius:3px;background:${i<CH_IDX%total?'var(--green)':i===CH_IDX%total?'var(--teal)':'var(--s5)'}"></div>`).join('')}</div>
+    </div>
+
+    <div style="font-size:22px;font-weight:800;color:var(--c1);letter-spacing:-0.5px;line-height:1.5;margin-bottom:16px">${q.q.replace('___','<span style="color:var(--teal);border-bottom:2px solid var(--teal);padding:0 8px;margin:0 3px">___</span>')}</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="ch-opts">
+      ${q.opts.map((o,i) => `<button class="opt" id="chopt${i}" onclick="pickCh(${i},${q.ans},'${q.hint.replace(/'/g,"\'")}')">
+        <span style="width:22px;height:22px;border-radius:6px;background:var(--s5);color:var(--c4);font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;flex-shrink:0">${'ABCD'[i]}</span>${o}
+      </button>`).join('')}
+    </div>
+
+    <div id="ch-hint" style="margin-top:12px;padding:10px 13px;background:rgba(45,212,191,.05);border:1px solid rgba(45,212,191,.12);border-radius:var(--ra);font-size:12px;color:var(--c2);display:none;line-height:1.8">💡 </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">📚 Leech-Karten (häufige Fehler)</div>
+    ${STATE.cards.filter(c=>c.lapses>=2).slice(0,6).map(c => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <span style="font-size:18px">${c.image||'📝'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.word||c.front.replace(/\{\{([^}]+)\}\}/g,'[$1]').slice(0,30)}</div>
+        <div style="font-size:10px;color:var(--c4)">${c.lapses} Fehler · EF: ${(c.ef||2.5).toFixed(1)} · ${c.back.slice(0,20)}</div>
+      </div>
+      <button onclick="STATE.reviewQueue=[c];STATE.reviewIdx=0;go('review')" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:10px;font-weight:600">üben</button>
+    </div>`).join('') || '<div style="color:var(--c4);font-size:12px">Keine Leech-Karten 🎉</div>'}
+  </div>`;
+}
+
+function pickCh(i, ans, hint) {
+  if (CH_CHOSEN !== null) return;
+  CH_CHOSEN = i;
+  document.querySelectorAll('[id^="chopt"]').forEach(el => el.style.pointerEvents = 'none');
+  document.getElementById('chopt' + ans).classList.add('ok');
+  if (i !== ans) document.getElementById('chopt' + i).classList.add('bad');
+  const hb = document.getElementById('ch-hint');
+  if (hb) { hb.style.display = 'block'; hb.innerHTML = '💡 ' + hint; }
+  if (i === ans) { CH_CORRECT++; playBeep(true); } else { CH_WRONG++; playBeep(false); }
+  // Save today stats
+  const today = new Date().toISOString().slice(0,10);
+  STATE.settings['challenge_date'] = today;
+  STATE.settings['challenge_today'] = String((parseInt(STATE.settings['challenge_today']||'0') + 1));
+  lsSaveSettings();
+  setTimeout(() => { CH_CHOSEN = null; CH_IDX++; renderChallenge(document.getElementById('page-body')); }, 2000);
+}
+
+/* ════════════════════════════════════
+   MODULE NEW-B: ENHANCED DECK PAGE helpers
+════════════════════════════════════ */
+function buildProgressRing(pct, size, color) {
+  size = size || 60; color = color || 'var(--teal)';
+  const r = (size-8)/2, c2 = size/2;
+  const circ = 2*Math.PI*r;
+  const dash = circ - (pct/100)*circ;
+  return `<svg width="${size}" height="${size}" class="prog-ring" viewBox="0 0 ${size} ${size}">
+    <circle class="prog-ring-track" cx="${c2}" cy="${c2}" r="${r}"/>
+    <circle class="prog-ring-fill" cx="${c2}" cy="${c2}" r="${r}" stroke="${color}"
+      stroke-dasharray="${circ}" stroke-dashoffset="${dash}"/>
+    <text x="${c2}" y="${c2}" text-anchor="middle" dominant-baseline="middle"
+      fill="${color}" font-size="${size*0.22}px" font-weight="700" transform="rotate(90,${c2},${c2})">${pct}%</text>
+  </svg>`;
+}
+
+function buildStreakCalendar(days) {
+  days = days || 28;
+  const today = new Date();
+  const studiedDates = new Set();
+  // Build from review_log or just today
+  if (STATE.reviewLog && STATE.reviewLog.length > 0) {
+    STATE.reviewLog.forEach(r => { if(r.reviewed_at) studiedDates.add(r.reviewed_at.slice(0,10)); });
+  }
+  const todayStr = today.toISOString().slice(0,10);
+  if (STATE.session && STATE.session.done > 0) studiedDates.add(todayStr);
+
+  let html = '<div class="streak-cal">';
+  for (let i = days-1; i >= 0; i--) {
+    const d = new Date(Date.now() - i*86400000);
+    const ds = d.toISOString().slice(0,10);
+    const isToday = ds === todayStr;
+    const studied = studiedDates.has(ds);
+    const cls = isToday ? 'sc-today' : studied ? 'sc-done' : i < 7 ? 'sc-miss' : 'sc-none';
+    const label = d.getDate();
+    html += `<div class="sc-day ${cls}" title="${ds}">${label}</div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+/* ════════════════════════════════════
+   MODULE 16: SEED DATA
+════════════════════════════════════ */
+const SEED_DECKS = [
+  {id:'job',     name:'Jobsuche & Bewerbung',        icon:'💼', color:'rgba(96,165,250,.08)',   description:'Kap. 2 · S.196–197', chapter:'Kapitel 2'},
+  {id:'buero',   name:'Erster Arbeitstag & Büro',    icon:'🏢', color:'rgba(45,212,191,.08)',   description:'Kap. 3 · S.212–213', chapter:'Kapitel 3'},
+  {id:'meeting', name:'Meeting & Konflikte',         icon:'🗣️', color:'rgba(167,139,250,.08)', description:'Kap. 4 · S.226–227', chapter:'Kapitel 4'},
+  {id:'messe',   name:'Messe & Produkt',             icon:'🏭', color:'rgba(251,146,60,.08)',   description:'Kap. 5 · S.242–243', chapter:'Kapitel 5'},
+  {id:'team',    name:'Teamarbeit & Kommunikation',  icon:'🤝', color:'rgba(244,114,182,.08)', description:'Kap. 6 · S.256–257', chapter:'Kapitel 6'},
+  {id:'angebot', name:'Angebote & Reklamation',      icon:'📋', color:'rgba(74,222,128,.08)',   description:'Kap. 7 · S.272–273', chapter:'Kapitel 7'},
+  {id:'gefuehl', name:'Gefühle & Eigenschaften',     icon:'😊', color:'rgba(250,204,21,.08)',   description:'Kap. 8 · S.290',     chapter:'Kapitel 8'},
+  {id:'zukunft', name:'Roboterwelt & Zukunft',         icon:'🤖', color:'rgba(167,139,250,.08)', description:'Kap. 10 · S.316–317', chapter:'Kapitel 10'},
+  {id:'redemittel', name:'Redemittel & Phrasen',        icon:'🗣️', color:'rgba(45,212,191,.08)',  description:'S.320–326 · Kommunikation', chapter:'Redemittel'},
+];
+
+// [word, translation_fa, grammar, emoji, tags[], deck_id, sentence_with_cloze]
+const SEED_VOC = [
+/* ════ KAP.2: JOBSUCHE & BEWERBUNG ════ */
+['herstellen','تولید کردن','<strong>herstellen</strong> trennbar | stellt her | Herstellung (Nomen)','🏗️',['Verb','trennbar'],'job','Das Unternehmen {{herstellt}} täglich hundert Produkte.'],
+['kostengünstig','مقرون‌به‌صرفه','Adjektiv | günstig = ارزان | Komp: kostengünstiger','💰',['Adj'],'job','Diese Methode ist sehr {{kostengünstig}}.'],
+['weiterverarbeiten','بیشتر فرآوری کردن','trennbar | verarbeiten + weiter | Passiv häufig','♻️',['Verb','trennbar'],'job','Das Material wird dann {{weiterverarbeitet}}.'],
+['die Spedition','شرکت حمل‌ونقل','-en | Logistik | der Spediteur','🚛',['Nomen','Beruf'],'job','Er arbeitet bei einer großen {{Spedition}}.'],
+['die Kundschaft','مشتریان','nur Sg. | die Kunden','👥',['Nomen'],'job','Die {{Kundschaft}} ist sehr zufrieden.'],
+['verärgern','عصبانی کردن','Akkusativ | verärgert (Adj)','😤',['Verb'],'job','Solches Verhalten kann Kunden {{verärgern}}.'],
+['der Zoll','گمرک','=e | Zollabfertigung','🛃',['Nomen'],'job','An der Grenze kontrolliert der {{Zoll}} die Waren.'],
+['die Formalität','رسمیات / تشریفات','-en | formal (Adj)','📋',['Nomen'],'job','Das sind nur {{Formalitäten}}.'],
+['sich spezialisieren auf','تخصص پیدا کردن در','+ Akkusativ | spezialisiert auf','🎯',['Verb','Präp','Akk'],'job','Sie hat sich {{auf}} Steuerrecht {{spezialisiert}}.'],
+['die Stellenanzeige','آگهی استخدام','-n | = Stellenausschreibung','📰',['Nomen','Bewerbung'],'job','Er hat die {{Stellenanzeige}} gefunden.'],
+['das Jobportal','سایت کاریابی','-e | online Bewerbung','💻',['Nomen','Bewerbung'],'job','Sie suchte auf einem {{Jobportal}} nach Stellen.'],
+['der Lebenslauf','رزومه / CV','=e | tabellarisch | Abk: CV','📄',['Nomen','Bewerbung'],'job','Ihr {{Lebenslauf}} muss aktuell sein.'],
+['die Bewerbung','درخواست کار','-en | sich bewerben um + Akk.','📝',['Nomen','Bewerbung'],'job','Sie hat eine {{Bewerbung}} abgeschickt.'],
+['die Absage','رد شدن / جواب رد','-n | Gegenteil: Zusage','❌',['Nomen','Bewerbung'],'job','Er hat eine {{Absage}} erhalten.'],
+['die Berufserfahrung','تجربه کاری','nur Sg. | langjährige ~','💼',['Nomen','Bewerbung'],'job','Er hat viel {{Berufserfahrung}} in der IT.'],
+['das Praktikum','کارآموزی','Praktika (Pl.) | Praktikant','🏫',['Nomen','Bewerbung'],'job','Sie macht ein {{Praktikum}} bei einer Firma.'],
+['die Herausforderung','چالش','-en | herausfordern (Verb)','⚡',['Nomen'],'job','Das Projekt ist eine große {{Herausforderung}}.'],
+['die persönliche Angaben','اطلاعات شخصی','Pl. | = Personalien','🪪',['Nomen','Lebenslauf'],'job','Füllen Sie die {{persönlichen Angaben}} aus.'],
+['das Geburtsdatum','تاریخ تولد','Geburtsdaten (Pl.)','📅',['Nomen','Lebenslauf'],'job','Bitte geben Sie Ihr {{Geburtsdatum}} an.'],
+['die Nationalität','ملیت','-en | die Nation','🌍',['Nomen','Lebenslauf'],'job','Bitte geben Sie Ihre {{Nationalität}} an.'],
+['die Tätigkeit','فعالیت / شغل','-en | tätig sein','💼',['Nomen','Lebenslauf'],'job','Was ist Ihre aktuelle {{Tätigkeit}}?'],
+['die Weiterbildung','آموزش تکمیلی','-en | sich weiterbilden','📚',['Nomen','Lebenslauf'],'job','Er macht eine {{Weiterbildung}} im Bereich IT.'],
+['die EDV-Kenntnisse','دانش کامپیوتر','Pl. | EDV = elektronische Datenverarbeitung','💻',['Nomen','Lebenslauf'],'job','Sie hat gute {{EDV-Kenntnisse}}.'],
+['die Muttersprache','زبان مادری','-n | muttersprachlich','🗣️',['Nomen','Lebenslauf'],'job','Seine {{Muttersprache}} ist Persisch.'],
+['detailliert','دقیق / با جزئیات','Adj/Adverb | = ausführlich','🔍',['Adj'],'job','Bitte beschreiben Sie das {{detailliert}}.'],
+['die Leidenschaft','اشتیاق / علاقه شدید','-en | leidenschaftlich (Adj)','❤️',['Nomen'],'job','Kochen ist seine große {{Leidenschaft}}.'],
+['handwerklich arbeiten','کار دستی/صنعتی کردن','handwerklich = Adj | das Handwerk','🔨',['Wendung'],'job','Er kann sehr gut {{handwerklich}} {{arbeiten}}.'],
+['das Land verlassen','کشور را ترک کردن','verlassen (verlässt, verließ) + Akk.','✈️',['Wendung'],'job','Sie musste {{das Land}} {{verlassen}}.'],
+['unterstützen bei','حمایت کردن در','+ Dativ | die Unterstützung','🤝',['Verb','Präp','Dat'],'job','Er {{unterstützt}} sie {{bei}} der Bewerbung.'],
+['der Behördengang','مراجعه به اداره','=e | Behörde + Gang','🏛️',['Nomen'],'job','Der {{Behördengang}} hat lange gedauert.'],
+['eine Prüfung ablegen','امتحان دادن','ablegen trennbar | = eine Prüfung machen','📝',['Wendung'],'job','Er muss eine {{Prüfung}} {{ablegen}}.'],
+['die Selbstständigkeit','خوداشتغالی','nur Sg. | selbstständig (Adj)','💼',['Nomen'],'job','Er träumt von der {{Selbstständigkeit}}.'],
+['die Finanzierung','تأمین مالی','-en | finanzieren (Verb)','💶',['Nomen'],'job','Die {{Finanzierung}} des Projekts ist gesichert.'],
+['abwechslungsreich','متنوع','Adj | Gegenteil: eintönig','🎨',['Adj'],'job','Die Arbeit ist sehr {{abwechslungsreich}}.'],
+['anstrengend','خسته‌کننده','Adj | sich anstrengen','😓',['Adj'],'job','Diese Tätigkeit ist sehr {{anstrengend}}.'],
+['fließend','روان (زبان)','Adverb | fließend sprechen','💬',['Adj','Adverb'],'job','Sie spricht {{fließend}} Deutsch.'],
+['verhandlungssicher','مذاکره‌کننده ماهر','Adj | verhandeln + sicher','🤝',['Adj'],'job','Er ist in Englisch {{verhandlungssicher}}.'],
+['teamfähig','توانایی کار تیمی','Adj | Teamfähigkeit (Nomen)','👥',['Adj'],'job','Sie ist sehr {{teamfähig}}.'],
+['übersichtlich','واضح / مرتب','Adj | die Übersicht','📊',['Adj'],'job','Das Dokument ist sehr {{übersichtlich}}.'],
+['erstellen','ایجاد کردن / تهیه','Akkusativ | = anfertigen','💻',['Verb'],'job','Er muss einen Bericht {{erstellen}}.'],
+['flexibel','انعطاف‌پذیر','Adj | Flexibilität (Nomen)','🔄',['Adj'],'job','Sie ist sehr {{flexibel}} und hilfsbereit.'],
+['im Zusammenhang stehen mit','مرتبط بودن با','+ Dativ | der Zusammenhang','🔗',['Wendung','Präp'],'job','Das {{steht}} in direktem {{Zusammenhang}} {{mit}} dem Problem.'],
+['die Aushilfe','کمک‌کار / موقت','-n | Aushilfsarbeiter','🙋',['Nomen'],'job','Er arbeitet als {{Aushilfe}} in einem Restaurant.'],
+['sich beruflich neu orientieren','تغییر مسیر شغلی','reflexiv | berufliche Neuorientierung','🧭',['Wendung'],'job','Sie möchte sich {{beruflich neu orientieren}}.'],
+['die Voraussetzung','پیش‌نیاز / شرط','-en | voraussetzen (Verb)','✅',['Nomen'],'job','Das ist die {{Voraussetzung}} für die Stelle.'],
+['die Stellenausschreibung','آگهی استخدام رسمی','-en | = Stellenanzeige','📋',['Nomen','Bewerbung'],'job','Die {{Stellenausschreibung}} ist online.'],
+['das Anschreiben','نامه درخواست کار','- (kein Pl.) | = Motivationsschreiben','✉️',['Nomen','Bewerbung'],'job','Das {{Anschreiben}} muss überzeugend sein.'],
+['der Eintrittstermin','تاریخ شروع به کار','-e | wann beginnt der Job?','📅',['Nomen','Bewerbung'],'job','Wann ist Ihr frühestmöglicher {{Eintrittstermin}}?'],
+['eine Anforderung erfüllen','یک شرط را برآورده کردن','Anforderung + erfüllen | = Voraussetzung','✅',['Wendung'],'job','Sie erfüllt alle {{Anforderungen}} für die Stelle.'],
+['einbringen in','مشارکت کردن / وارد کردن','+ Akkusativ | trennbar | bringt ein','💡',['Verb','Präp','Akk'],'job','Er kann viel Erfahrung {{einbringen}}.'],
+['das duale Studium','تحصیلات دوگانه','nur Sg. | Uni + Betrieb','🏫',['Nomen','Ausbildung'],'job','Das {{duale Studium}} verbindet Theorie und Praxis.'],
+['verdienen','درآمد داشتن','Akkusativ | gut verdienen','💶',['Verb'],'job','Sie {{verdient}} gut als Ingenieurin.'],
+['verantwortungsvoll','مسئولیت‌پذیر','Adj | Verantwortung + voll','🎯',['Adj'],'job','Er ist sehr {{verantwortungsvoll}}.'],
+['üblich','معمول','Adj | = normal, gewöhnlich','📏',['Adj'],'job','Das ist hier {{üblich}} so.'],
+['nötig','ضروری / لازم','Adj | = notwendig | nötig haben','⚠️',['Adj'],'job','Das ist {{nötig}} für das Projekt.'],
+['prüfen','بررسی کردن / آزمون کردن','Akkusativ | = kontrollieren','🔍',['Verb'],'job','Bitte {{prüfen}} Sie die Unterlagen.'],
+
+/* ════ KAP.3: BÜRO & ARBEITSTAG ════ */
+['die Abteilung','بخش / دپارتمان','-en | Abteilungsleiter','🏢',['Nomen','Büro'],'buero','Er arbeitet in der Marketing-{{Abteilung}}.'],
+['die Geschäftsleitung','مدیریت شرکت','-en | Geschäft + Leitung','👔',['Nomen','Büro'],'buero','Die {{Geschäftsleitung}} hat entschieden.'],
+['die Buchhaltung','بخش حسابداری','nur Sg. | buchen (Verb)','📊',['Nomen','Büro'],'buero','Die {{Buchhaltung}} erstellt die Jahresabrechnung.'],
+['das Controlling','کنترلینگ / مدیریت مالی','nur Sg. | Controller','📈',['Nomen','Büro'],'buero','Das {{Controlling}} überwacht die Kosten.'],
+['die Personalabteilung','دپارتمان منابع انسانی','-en | = HR-Abteilung','👤',['Nomen','Büro'],'buero','Fragen Sie die {{Personalabteilung}} wegen des Urlaubs.'],
+['die Rechtsabteilung','دپارتمان حقوقی','-en | Rechtsanwalt','⚖️',['Nomen','Büro'],'buero','Die {{Rechtsabteilung}} prüft den Vertrag.'],
+['die Forschung und Entwicklung','تحقیق و توسعه','F&E | = R&D','🔬',['Nomen','Büro'],'buero','Die {{Forschung und Entwicklung}} braucht mehr Budget.'],
+['der Vertrieb','واحد فروش','-e | = Verkauf','💹',['Nomen','Büro'],'buero','Er ist im {{Vertrieb}} tätig.'],
+['der Kundenservice','خدمات مشتری','nur Sg. | Servicecenter','☎️',['Nomen','Büro'],'buero','Der {{Kundenservice}} ist 24h erreichbar.'],
+['die Logistik','لجستیک / حمل‌ونقل','nur Sg. | Logistiker','🚛',['Nomen','Büro'],'buero','Die {{Logistik}} plant die Lieferwege.'],
+['vertraglich festlegen','به صورت قراردادی تعیین کردن','festlegen trennbar | vertragliche Vereinbarung','⚖️',['Wendung'],'buero','Das Gehalt wird {{vertraglich}} {{festgelegt}}.'],
+['vertrauensvoll','مورد اعتماد','Adj | Vertrauen + voll','🤝',['Adj'],'buero','Die Zusammenarbeit ist sehr {{vertrauensvoll}}.'],
+['die Bankverbindung','مشخصات حساب بانکی','-en | IBAN + BIC','🏦',['Nomen','Büro'],'buero','Bitte geben Sie Ihre {{Bankverbindung}} an.'],
+['die Steueridentifikationsnummer','شماره شناسه مالیاتی','-n | Abk: Steuer-ID','🔢',['Nomen','Büro'],'buero','Für die Anmeldung brauchen wir Ihre {{Steueridentifikationsnummer}}.'],
+['das Führungszeugnis','گواهی عدم سوء پیشینه','-se | polizeiliches ~','📜',['Nomen','Büro'],'buero','Er braucht ein {{Führungszeugnis}}.'],
+['die Arbeitszeiterfassung','ثبت ساعات کاری','nur Sg. | Arbeitszeit + Erfassung','⏱️',['Nomen','Büro'],'buero','Die {{Arbeitszeiterfassung}} erfolgt digital.'],
+['die Chipkarte','کارت هوشمند','-n | = Smartcard','💳',['Nomen','Büro'],'buero','Mit der {{Chipkarte}} öffnen Sie die Tür.'],
+['die Pausenregelung','قانون استراحت','-en | Pause + Regelung','⏸️',['Nomen','Büro'],'buero','Die {{Pausenregelung}} ist im Vertrag geregelt.'],
+['die Krankmeldung','گواهی بیماری','-en | krank + Meldung','🏥',['Nomen','Büro'],'buero','Die {{Krankmeldung}} muss zum Arzt.'],
+['ergonomisch','ارگونومیک','Adj | Ergonomie (Nomen)','🪑',['Adj'],'buero','Der Schreibtisch ist {{ergonomisch}} eingestellt.'],
+['gründlich','کامل / دقیق','Adj/Adverb | = sorgfältig','🔍',['Adj'],'buero','Sie arbeitet sehr {{gründlich}}.'],
+['umgehend','فوری / بلافاصله','Adverb | = sofort','⚡',['Adverb'],'buero','Bitte reagieren Sie {{umgehend}}.'],
+['auf keinen Fall','به هیچ وجه','= niemals | Gegenteil: auf jeden Fall','🚫',['Wendung'],'buero','Das darf {{auf keinen Fall}} passieren.'],
+['ein Gespräch führen mit','گفتگو کردن با','+ Dativ | = sprechen mit','💬',['Wendung','Präp'],'buero','Er {{führt}} ein Gespräch {{mit}} dem Chef.'],
+['zuständig für','مسئول / مربوط به','+ Akkusativ | Zuständigkeit','🎯',['Adj','Präp'],'buero','Wer ist {{zuständig}} {{für}} die IT?'],
+['ermöglichen','امکان‌پذیر کردن','Akkusativ | = erlauben','🔓',['Verb'],'buero','Diese App {{ermöglicht}} schnelle Kommunikation.'],
+['sich befinden','قرار داشتن','befindet, befand, befunden | + Ortsangabe','📍',['Verb','reflexiv'],'buero','Das Büro {{befindet}} sich im dritten Stock.'],
+['austauschen','تبادل کردن / عوض کردن','trennbar | Erfahrungen ~','🔄',['Verb','trennbar'],'buero','Wir {{tauschen}} regelmäßig Informationen {{aus}}.'],
+['desinfizieren','ضدعفونی کردن','Akkusativ | Desinfektionsmittel','🧴',['Verb'],'buero','Bitte {{desinfizieren}} Sie Ihre Hände.'],
+['die Rücksprache mit','مشورت با','-n | Rücksprache halten','🗣️',['Nomen','Präp'],'buero','Ich halte {{Rücksprache}} {{mit}} dem Chef.'],
+['die Durchwahl','شماره داخلی (تلفن)','-en | direkte Nummer','📞',['Nomen','Büro'],'buero','Meine {{Durchwahl}} ist 247.'],
+['anpassen','تطبیق دادن / هماهنگ کردن','trennbar | = anpassen an','⚙️',['Verb','trennbar'],'buero','Wir müssen uns an die Regeln {{anpassen}}.'],
+['einrichten','مجهز کردن / ترتیب دادن','trennbar | das Büro ~','🪑',['Verb','trennbar'],'buero','Sie {{richtet}} ihr Büro {{ein}}.'],
+['vollständig','کامل / تمام','Adj | = komplett','✅',['Adj'],'buero','Bitte füllen Sie das Formular {{vollständig}} aus.'],
+['erfolgen','انجام شدن / صورت گرفتن','unpersönlich | = stattfinden','📋',['Verb'],'buero','Die Zahlung {{erfolgt}} per Überweisung.'],
+['unternehmen','دست زدن به / انجام دادن','unternimmt, unternahm, unternommen','🚀',['Verb'],'buero','Was können wir dagegen {{unternehmen}}?'],
+['sich in Verbindung setzen mit','تماس گرفتن با','+ Dativ | = kontaktieren','📨',['Wendung'],'buero','Bitte {{setzen}} Sie sich {{mit}} uns {{in Verbindung}}.'],
+['Rückmeldung geben','بازخورد دادن','+ zu + Dativ | = Feedback','💬',['Wendung'],'buero','Ich gebe Ihnen bis morgen {{Rückmeldung}}.'],
+['sich abstimmen mit','هماهنگ کردن با','+ Dativ | Abstimmung','🤝',['Verb','Präp','Dat'],'buero','Wir müssen uns {{mit}} dem Team {{abstimmen}}.'],
+['sich verständigen mit','برقراری ارتباط با','+ Dativ | sich verständlich machen','📞',['Verb','Präp','Dat'],'buero','Es ist schwer, sich {{mit}} ihm {{zu verständigen}}.'],
+['jdm. etw. zukommen lassen','چیزی را به کسی رساندن','trennbar | formal','📮',['Wendung'],'buero','Ich {{lasse}} Ihnen die Unterlagen {{zukommen}}.'],
+['zugänglich machen für','قابل دسترس کردن برای','+ Akkusativ | zugänglich','🔓',['Wendung'],'buero','Die Dateien werden für alle {{zugänglich}} {{gemacht}}.'],
+['im System hinterlegen','در سیستم ثبت کردن','hinterlegen = ablegen | formal','💾',['Wendung'],'buero','Die Daten wurden {{im System}} {{hinterlegt}}.'],
+['die Teamsitzung','جلسه تیمی','-en | = Teammeeting','🗓️',['Nomen','Büro'],'buero','Die {{Teamsitzung}} findet montags statt.'],
+['die Tagesordnung','دستور جلسه','-en | TOP (Tagesordnungspunkt)','📋',['Nomen','Büro'],'buero','Der erste Punkt der {{Tagesordnung}} ist Budget.'],
+['jdn. auf den neuesten Stand bringen','کسی را به‌روز کردن','trennbar | = informieren','📡',['Wendung'],'buero','Bitte {{bringen}} Sie mich auf den {{neuesten Stand}}.'],
+['berücksichtigen','در نظر گرفتن','Akkusativ | = beachten','🧩',['Verb'],'buero','Bitte {{berücksichtigen}} Sie alle Kosten.'],
+['zeitnah','به موقع / فوری','Adverb | = prompt','⏰',['Adverb'],'buero','Wir reagieren {{zeitnah}} auf Ihre Anfrage.'],
+['einheitlich','یکنواخت / یکسان','Adj | Einheit + -lich','📏',['Adj'],'buero','Bitte {{einheitlich}} formatieren.'],
+['entsorgen','دفع کردن / دور انداختن','Akkusativ | Entsorgung','♻️',['Verb'],'buero','Bitte {{entsorgen}} Sie alte Dokumente korrekt.'],
+['schreddern','خرد کردن (اسناد)','Akkusativ | der Schredder','🗂️',['Verb'],'buero','Wir müssen die alten Akten {{schreddern}}.'],
+['der Dienstplan','برنامه خدمت','-e | Schichtplan','📅',['Nomen','Büro'],'buero','Der {{Dienstplan}} für nächste Woche ist fertig.'],
+['die Fortbildung','دوره آموزشی','-en | = Weiterbildung','📚',['Nomen','Büro'],'buero','Er nimmt an einer {{Fortbildung}} teil.'],
+['am Laufen halten','در جریان نگه داشتن','idiomatisch | = funktionieren lassen','⚙️',['Wendung'],'buero','Wir müssen das System {{am Laufen halten}}.'],
+['anmahnen','یادآوری کردن / تذکر دادن','= mahnen | eine Zahlung ~','⚠️',['Verb'],'buero','Die Rechnung wurde mehrmals {{angemahnt}}.'],
+['entsprechend','متناسب / مطابق','Adj/Adverb | = gemäß','📐',['Adj','Adverb'],'buero','Bitte handeln Sie {{entsprechend}} den Regeln.'],
+['der Small Talk','گفتگوی سبک','nur Sg. | engl. Lehnwort','💬',['Nomen','Büro'],'buero','Er ist gut im {{Small Talk}}.'],
+['der Blickkontakt','تماس چشمی','nur Sg. | Blick + Kontakt','👀',['Nomen'],'buero','{{Blickkontakt}} ist wichtig in einem Gespräch.'],
+
+/* ════ KAP.4: MEETING & KONFLIKTE ════ */
+['das Meeting','جلسه','-s | = Besprechung | leiten','🗓️',['Nomen','Meeting'],'meeting','Das {{Meeting}} beginnt um 10 Uhr.'],
+['die Videokonferenz','کنفرانس ویدیویی','-en | = Video-Call','💻',['Nomen','Meeting'],'meeting','Wir haben eine {{Videokonferenz}} mit dem Kunden.'],
+['in Präsenz','به صورت حضوری','Gegenteil: online | hybrid','🏢',['Wendung'],'meeting','Das Meeting findet {{in Präsenz}} statt.'],
+['die Agenda','دستور جلسه','Agenden | = Tagesordnung','📋',['Nomen','Meeting'],'meeting','Bitte senden Sie die {{Agenda}} vorher.'],
+['voranbringen','پیش بردن','trennbar | bringt voran, vorangebracht','🚀',['Verb','trennbar'],'meeting','Wir müssen das Projekt {{voranbringen}}.'],
+['Personen an einen Tisch bringen','افراد را دور هم جمع کردن','idiomatisch | = vermitteln','🤝',['Wendung'],'meeting','Er kann {{Personen an einen Tisch bringen}}.'],
+['zusammentreffen','ملاقات کردن','trifft, traf, ist zusammengetroffen','🤝',['Verb','trennbar'],'meeting','Sie {{treffen}} sich morgen {{zusammen}}.'],
+['respektvoll','محترمانه','Adj | Respekt + voll','🙏',['Adj'],'meeting','Sprechen Sie immer {{respektvoll}} miteinander.'],
+['angemessen','مناسب / متناسب','Adj | = passend','⚖️',['Adj'],'meeting','Sein Verhalten war {{angemessen}}.'],
+['stichpunktartig','به صورت نکته‌وار','Adj/Adverb | Stichpunkt = bullet','📝',['Adj'],'meeting','Notieren Sie alles {{stichpunktartig}}.'],
+['die Transparenz','شفافیت','nur Sg. | transparent','🔍',['Nomen'],'meeting','{{Transparenz}} ist wichtig für Vertrauen.'],
+['profitieren von','سود بردن از','+ Dativ | = Nutzen ziehen','📈',['Verb','Präp','Dat'],'meeting','Alle {{profitieren}} {{von}} dieser Lösung.'],
+['jdm. eine Aufgabe übertragen','وظیفه‌ای به کسی واگذار کردن','übertragen (überträgt, übertrug, übertragen)','📋',['Wendung'],'meeting','Der Chef {{überträgt}} ihm neue {{Aufgaben}}.'],
+['optimieren','بهینه‌سازی کردن','Akkusativ | Optimierung','⚙️',['Verb'],'meeting','Wir müssen den Prozess {{optimieren}}.'],
+['die Zuverlässigkeit','قابلیت اطمینان','nur Sg. | zuverlässig (Adj)','✅',['Nomen'],'meeting','Die {{Zuverlässigkeit}} der Mitarbeiter ist hoch.'],
+['die Wertschätzung','قدردانی','nur Sg. | wertschätzen (Verb)','❤️',['Nomen'],'meeting','{{Wertschätzung}} ist wichtig am Arbeitsplatz.'],
+['die Konkurrenz','رقابت / رقیب','nur Sg. | konkurrieren','🏆',['Nomen'],'meeting','Interne {{Konkurrenz}} kann schädlich sein.'],
+['der Neid','حسادت','nur Sg. | neidisch (Adj)','😒',['Nomen'],'meeting','{{Neid}} zerstört das Arbeitsklima.'],
+['die Aggression','پرخاشگری','-en | aggressiv (Adj)','😠',['Nomen'],'meeting','Er zeigt manchmal {{Aggressionen}}.'],
+['jdn. bloßstellen','آبرو بردن / تحقیر کردن','+ Akkusativ | negativ','😳',['Wendung'],'meeting','Man sollte niemanden {{bloßstellen}}.'],
+['unzureichend','ناکافی','Adj | = nicht ausreichend','❌',['Adj'],'meeting','Die Erklärung war {{unzureichend}}.'],
+['Kritik üben an','انتقاد کردن از','üben + an + Dativ','🗣️',['Wendung','Präp'],'meeting','Er {{übt}} {{Kritik}} {{an}} der Entscheidung.'],
+['der Standpunkt','دیدگاه / موضع','-e | = Meinung','💬',['Nomen'],'meeting','Er vertritt einen klaren {{Standpunkt}}.'],
+['beharren auf','پافشاری کردن روی','+ Dativ | = bestehen auf','💪',['Verb','Präp','Dat'],'meeting','Er {{beharrt}} {{auf}} seinem Standpunkt.'],
+['etw. hinter dem Rücken besprechen','پشت سر کسی چیزی را بحث کردن','idiomatisch | negativ','🤫',['Wendung'],'meeting','Das wird {{hinter dem Rücken}} {{besprochen}}.'],
+['konstruktiv','سازنده','Adj | konstruktive Kritik','🏗️',['Adj'],'meeting','Geben Sie {{konstruktive}} Kritik.'],
+['eine andere Perspektive einnehmen','دیدگاه دیگری گرفتن','einnehmen trennbar | = Standpunkt wechseln','👁️',['Wendung'],'meeting','Versuche, eine andere {{Perspektive einzunehmen}}.'],
+['der Kompromiss','مصالحه','-e | einen ~ finden','🤝',['Nomen'],'meeting','Wir haben einen {{Kompromiss}} gefunden.'],
+['eine Entschuldigung annehmen','عذرخواهی را پذیرفتن','annehmen trennbar | Gegenteil: ablehnen','🙏',['Wendung'],'meeting','Er hat die {{Entschuldigung}} {{angenommen}}.'],
+['unter vier Augen reden','خصوصی صحبت کردن','= vertraulich | privat','🤫',['Wendung'],'meeting','Können wir {{unter vier Augen}} reden?'],
+['nachvollziehen können','درک کردن / فهمیدن','nachvollziehen trennbar | = verstehen','💡',['Wendung'],'meeting','Das kann ich gut {{nachvollziehen}}.'],
+['unter Druck stehen','تحت فشار بودن','= gestresst sein','😰',['Wendung'],'meeting','Sie {{steht}} gerade sehr {{unter Druck}}.'],
+['in Angriff nehmen','شروع کردن / دست به کار شدن','= beginnen | idiomatisch','🚀',['Wendung'],'meeting','Wir müssen das sofort {{in Angriff nehmen}}.'],
+['in Kauf nehmen','قبول کردن / پذیرفتن','= akzeptieren (negativ)','😤',['Wendung'],'meeting','Diese Nachteile müssen wir {{in Kauf nehmen}}.'],
+['das Ergebnisprotokoll','صورتجلسه نتایج','-e | Ergebnis + Protokoll','📋',['Nomen','Meeting'],'meeting','Das {{Ergebnisprotokoll}} wird verteilt.'],
+['der Report','گزارش','-s | engl. Lehnwort','📊',['Nomen','Meeting'],'meeting','Der {{Report}} muss bis Freitag fertig sein.'],
+['das Rundschreiben','بخشنامه','- | = Zirkular','📨',['Nomen','Meeting'],'meeting','Ein {{Rundschreiben}} ging an alle Mitarbeiter.'],
+['der Projektstand','وضعیت پروژه','-e | Stand + Projekt','📊',['Nomen','Meeting'],'meeting','Wie ist der aktuelle {{Projektstand}}?'],
+['eine Entscheidung treffen','تصمیم گرفتن','treffen (trifft, traf, getroffen)','⚖️',['Wendung'],'meeting','Wir müssen heute eine {{Entscheidung}} {{treffen}}.'],
+['sich Sorgen machen um','نگران بودن برای','machen + um + Akkusativ','😟',['Wendung'],'meeting','Er {{macht}} sich {{Sorgen}} {{um}} die Zukunft.'],
+['final','نهایی','Adj | = endgültig | finale Version','✅',['Adj'],'meeting','Das ist die {{finale}} Entscheidung.'],
+['rege','پرجنب‌وجوش / فعال','Adj | rege Diskussion','⚡',['Adj'],'meeting','Es gab eine {{rege}} Diskussion.'],
+['der Elternteil','والد','-e | Eltern = والدین','👨‍👩‍👧',['Nomen'],'meeting','Jeder {{Elternteil}} hat Verantwortung.'],
+['der Bildungsträger','مؤسسه آموزشی','- | Bildung + Träger','🏫',['Nomen'],'meeting','Der {{Bildungsträger}} bietet Kurse an.'],
+['die Übergabe','تحویل','-n | übergeben (Verb)','🤝',['Nomen'],'meeting','Die {{Übergabe}} der Aufgaben erfolgt morgen.'],
+['das Vorkommnis','اتفاق / حادثه','-se | vorkommen | = Ereignis','⚠️',['Nomen'],'meeting','Dieses {{Vorkommnis}} muss gemeldet werden.'],
+['die Inventur','موجودی‌گیری','-en | Inventuraufnahme','📦',['Nomen'],'meeting','Die {{Inventur}} findet im Januar statt.'],
+['der Verantwortungsbereich','حیطه مسئولیت','-e | Verantwortung + Bereich','🎯',['Nomen'],'meeting','Das gehört nicht zu meinem {{Verantwortungsbereich}}.'],
+['eine Frage stellen','سوال پرسیدن','NVV | stellen','❓',['Wendung'],'meeting','Er {{stellt}} eine wichtige {{Frage}}.'],
+['eine Rolle spielen','نقش داشتن','NVV | spielen','🎭',['Wendung'],'meeting','Das spielt eine große {{Rolle}}.'],
+
+/* ════ KAP.5: MESSE & PRODUKT ════ */
+['die Messe','نمایشگاه','-n | das Messegelände','🏛️',['Nomen','Messe'],'messe','Die {{Messe}} findet in Frankfurt statt.'],
+['das Messegelände','محل نمایشگاه','- | Messe + Gelände','🏟️',['Nomen','Messe'],'messe','Das {{Messegelände}} ist riesig.'],
+['der Kongress','کنگره / همایش','-e | = Konferenz','🎤',['Nomen','Messe'],'messe','Sie nimmt am internationalen {{Kongress}} teil.'],
+['vertreten sein','حضور داشتن / نمایندگی داشتن','sein + Partizip | repräsentieren','🏳️',['Wendung'],'messe','Wir sind auf der Messe {{vertreten}}.'],
+['der/die Aussteller/in','نمایشگر / غرفه‌دار','-/-nen | ausstellen (Verb)','🖼️',['Nomen','Messe'],'messe','Die {{Aussteller}} kommen aus 30 Ländern.'],
+['der persönliche Kontakt mit','تماس شخصی با','+ Dativ | = direkter Kontakt','🤝',['Wendung'],'messe','{{Persönlicher Kontakt}} {{mit}} Kunden ist wichtig.'],
+['der Schwerpunkt','اولویت / محور','-e | Schwerpunkt setzen','🎯',['Nomen','Messe'],'messe','Der {{Schwerpunkt}} liegt auf Nachhaltigkeit.'],
+['spezialisiert auf','تخصص داشتن در','+ Akkusativ | sich spezialisieren','🎯',['Adj','Präp'],'messe','Wir sind {{spezialisiert}} {{auf}} Solarenergie.'],
+['kompetent','کارآزموده / شایسته','Adj | Kompetenz (Nomen)','⭐',['Adj'],'messe','Unser Team ist sehr {{kompetent}}.'],
+['der Kran','جرثقیل','=e | Baukran','🏗️',['Nomen','Messe'],'messe','Der {{Kran}} hebt schwere Lasten.'],
+['der Bagger','بیل مکانیکی','- | baggern (Verb)','⚙️',['Nomen','Messe'],'messe','Der {{Bagger}} ist auf der Baustelle.'],
+['das Give-away','هدیه تبلیغاتی','-s | engl. | Werbegeschenk','🎁',['Nomen','Messe'],'messe','Am Stand gibt es {{Give-aways}}.'],
+['werben für','تبلیغ کردن برای','+ Akkusativ | die Werbung','📢',['Verb','Präp','Akk'],'messe','Das Unternehmen {{wirbt}} {{für}} sein Produkt.'],
+['der Weltkonzern','شرکت چندملیتی','-e | weltweit tätig','🌐',['Nomen','Wirtschaft'],'messe','Sie arbeitet bei einem {{Weltkonzern}}.'],
+['weltweit','در سرتاسر جهان','Adverb | = international','🌍',['Adverb'],'messe','Das Unternehmen ist {{weltweit}} tätig.'],
+['der Unternehmensbereich','حوزه شرکت','-e | Unternehmen + Bereich','🏢',['Nomen','Wirtschaft'],'messe','Das ist ein neuer {{Unternehmensbereich}}.'],
+['gründen','تأسیس کردن','Akkusativ | die Gründung','🏗️',['Verb'],'messe','Er hat ein Unternehmen {{gegründet}}.'],
+['der Umsatz','درآمد / گردش مالی','=e | Umsatz steigern','💰',['Nomen','Wirtschaft'],'messe','Der {{Umsatz}} ist dieses Jahr gestiegen.'],
+['die Dienstleistung','خدمات','-en | = Service','🛎️',['Nomen','Wirtschaft'],'messe','Sie bieten {{Dienstleistungen}} an.'],
+['an einem Plan festhalten','به برنامه پایبند بودن','festhalten trennbar | = bei etw. bleiben','📋',['Wendung'],'messe','Wir {{halten}} {{an}} unserem {{Plan}} {{fest}}.'],
+['benötigen','نیاز داشتن به','Akkusativ | = brauchen (formell)','🔧',['Verb'],'messe','Wir {{benötigen}} mehr Zeit.'],
+['zuverlässig','قابل اعتماد','Adj | Zuverlässigkeit (Nomen)','✅',['Adj'],'messe','Der Lieferant ist sehr {{zuverlässig}}.'],
+['ambitioniert','جاه‌طلبانه / بلندپرواز','Adj | = ehrgeizig | Ambition','🎯',['Adj'],'messe','Das ist ein sehr {{ambitioniertes}} Projekt.'],
+['innovativ','نوآورانه','Adj | Innovation (Nomen)','💡',['Adj'],'messe','Das Unternehmen ist sehr {{innovativ}}.'],
+['vernetzen','شبکه‌سازی کردن','reflexiv | sich ~ | Netzwerk','🌐',['Verb'],'messe','Auf der Messe kann man sich gut {{vernetzen}}.'],
+['die künstliche Intelligenz','هوش مصنوعی','KI | = AI | KI-System','🤖',['Nomen','Tech'],'messe','{{Künstliche Intelligenz}} verändert die Arbeitswelt.'],
+['die Erfrischung','نوشیدنی/خوراک خنک‌کننده','-en | erfrischen (Verb)','🥤',['Nomen','Messe'],'messe','Es werden {{Erfrischungen}} angeboten.'],
+['die Attraktion','جاذبه','-en | attraktiv (Adj)','⭐',['Nomen','Messe'],'messe','Das ist die {{Attraktion}} der Messe.'],
+['ausführlich','مفصل / با جزئیات','Adj/Adverb | = detailliert','📖',['Adj'],'messe','Er erklärt alles {{ausführlich}}.'],
+['die Störung','اختلال / مشکل','-en | stören (Verb)','⚠️',['Nomen','Messe'],'messe','Es gibt eine technische {{Störung}}.'],
+['die Verzögerung','تأخیر','-en | sich verzögern','⏳',['Nomen','Messe'],'messe','Es kam zu einer {{Verzögerung}}.'],
+['die Beschränkung','محدودیت','-en | beschränken (Verb)','🚧',['Nomen','Messe'],'messe','Es gibt {{Beschränkungen}} beim Einlass.'],
+['sperren','بستن / مسدود کردن','Akkusativ | = schließen','🔒',['Verb'],'messe','Die Straße wurde {{gesperrt}}.'],
+['den Alarm auslösen','آژیر خطر دادن','auslösen trennbar | Alarm','🚨',['Wendung'],'messe','Der Rauch hat den {{Alarm}} {{ausgelöst}}.'],
+['die Lüftungsanlage','سیستم تهویه','-n | Lüftung + Anlage','💨',['Nomen','Tech'],'messe','Die {{Lüftungsanlage}} muss gewartet werden.'],
+['das Raumklima','آب‌وهوای داخلی','nur Sg. | Raum + Klima','🌡️',['Nomen','Tech'],'messe','Das {{Raumklima}} ist gut reguliert.'],
+['installieren','نصب کردن','Akkusativ | Installation (Nomen)','🔧',['Verb'],'messe','Der Techniker {{installiert}} die Anlage.'],
+['montieren','سوار کردن / نصب کردن','Akkusativ | = zusammenbauen','🔩',['Verb'],'messe','Die Teile werden {{montiert}}.'],
+['die Ausstattung','تجهیزات','-en | ausstatten (Verb)','🛋️',['Nomen'],'messe','Die {{Ausstattung}} des Büros ist modern.'],
+['im Betrieb sein','در حال کار بودن','Betrieb = عملیات | in Betrieb nehmen','⚙️',['Wendung'],'messe','Die Anlage ist {{im Betrieb}}.'],
+['die Wartung','سرویس و نگهداری','-en | warten (Verb)','🔧',['Nomen'],'messe','Die {{Wartung}} erfolgt jährlich.'],
+['der Betriebsrat','شورای کارگری','=e | Mitbestimmung','⚖️',['Nomen'],'messe','Der {{Betriebsrat}} vertritt die Mitarbeiter.'],
+['beeinträchtigen','مختل کردن / آسیب رساندن','Akkusativ | = stören','⚡',['Verb'],'messe','Der Lärm {{beeinträchtigt}} die Konzentration.'],
+['Aufmerksamkeit gewinnen','جلب توجه کردن','gewinnen (gewann, gewonnen)','👀',['Wendung'],'messe','Das Design {{gewinnt}} viel {{Aufmerksamkeit}}.'],
+['ein Gebäude verlassen','از ساختمان خارج شدن','verlassen (verlässt, verließ) | Notfall','🚪',['Wendung'],'messe','Im Notfall das {{Gebäude}} sofort {{verlassen}}.'],
+['Ruhe bewahren','آرامش خود را حفظ کردن','bewahren = bewahren | Panik','🧘',['Wendung'],'messe','Bitte {{Ruhe bewahren}} im Notfall.'],
+['das Treppenhaus','راه‌پله','=er | Treppe + Haus','🏃',['Nomen'],'messe','Das {{Treppenhaus}} nicht blockieren.'],
+['der Sammelpunkt','نقطه تجمع','-e | sammeln + Punkt','📍',['Nomen'],'messe','Der {{Sammelpunkt}} ist vor dem Gebäude.'],
+['nächstgelegen','نزدیکترین','Adj | nächste + gelegen','📍',['Adj'],'messe','Das {{nächstgelegene}} Hospital ist 2 km.'],
+['stadtauswärts','به سمت بیرون شهر','Adverb | Gegenteil: stadteinwärts','🚌',['Adverb'],'messe','Der Bus fährt {{stadtauswärts}}.'],
+['bereitgestellt','فراهم شده / تأمین شده','Adj | bereitstellen trennbar','✅',['Adj'],'messe','Ein Ersatzbus wurde {{bereitgestellt}}.'],
+
+/* ════ KAP.6: TEAM & KOMMUNIKATION ════ */
+['das Arbeitsklima','فضای کاری','nur Sg. | = Betriebsklima','🌤️',['Nomen','Team'],'team','Das {{Arbeitsklima}} ist sehr gut.'],
+['die Hilfsbereitschaft','آمادگی برای کمک','nur Sg. | hilfsbereit (Adj)','🤝',['Nomen','Team'],'team','Seine {{Hilfsbereitschaft}} wird geschätzt.'],
+['das Durchhaltevermögen','استقامت','nur Sg. | durchhalten + Vermögen','💪',['Nomen','Team'],'team','Sie hat großes {{Durchhaltevermögen}}.'],
+['die Fachkompetenz','تخصص','nur Sg. | Expertise','⭐',['Nomen','Team'],'team','Ihre {{Fachkompetenz}} ist beeindruckend.'],
+['die Bereitschaft zu','آمادگی برای','+ Dativ | bereit sein','✅',['Nomen','Präp'],'team','Die {{Bereitschaft}} {{zu}} Veränderungen ist wichtig.'],
+['jdm. den Vorzug geben','اولویت دادن به کسی','+ Dativ | = bevorzugen','🥇',['Wendung'],'team','Er {{gibt}} ihr den {{Vorzug}}.'],
+['der Diskussionsbedarf','نیاز به بحث','nur Sg. | Diskussion + Bedarf','🗣️',['Nomen','Team'],'team','Da gibt es noch {{Diskussionsbedarf}}.'],
+['das Konfliktpotenzial','پتانسیل تعارض','-e | Konflikt + Potenzial','⚠️',['Nomen','Team'],'team','Das hat hohes {{Konfliktpotenzial}}.'],
+['der Umgangston','لحن رفتاری','nur Sg. | Umgang + Ton','💬',['Nomen','Team'],'team','Der {{Umgangston}} soll respektvoll sein.'],
+['unangemessen','نامناسب','Adj | Gegenteil: angemessen','❌',['Adj'],'team','Sein Verhalten war {{unangemessen}}.'],
+['das Vorbild','الگو / نمونه','-er | jdm. als ~ dienen','🏆',['Nomen','Team'],'team','Er ist ein {{Vorbild}} für alle.'],
+['würdigen','قدردانی کردن / ارج نهادن','Akkusativ | = anerkennen','🎖️',['Verb'],'team','Man sollte gute Arbeit {{würdigen}}.'],
+['wohlwollend','خیرخواهانه / مهربانانه','Adj | Wohlwollen (Nomen)','😊',['Adj'],'team','Sie gibt {{wohlwollende}} Kritik.'],
+['anerkennend','تأییدکننده / قدردانانه','Adj | anerkennen trennbar','👏',['Adj'],'team','Er spricht {{anerkennend}} über seine Kollegen.'],
+['klagen','شکایت کردن / گله کردن','über + Akkusativ | = sich beschweren','😟',['Verb'],'team','Er {{klagt}} oft über die Arbeit.'],
+['miserabel','بسیار بد / افتضاح','Adj | = sehr schlecht','😟',['Adj'],'team','Die Qualität ist {{miserabel}}.'],
+['durchstellen','وصل کردن (تلفن)','trennbar | = verbinden','📞',['Verb','trennbar'],'team','Ich {{stelle}} Sie sofort {{durch}}.'],
+['verbinden mit','وصل کردن / ارتباط دادن','+ Dativ | verbindet, verband, verbunden','📞',['Verb','Präp','Dat'],'team','Ich {{verbinde}} Sie {{mit}} Herrn Müller.'],
+['falsch verbunden sein','اشتباه وصل شدن','= falsche Nummer','☎️',['Wendung'],'team','Ich glaube, Sie sind {{falsch verbunden}}.'],
+['jdm. etw. ausrichten','پیامی به کسی رساندن','trennbar | = Nachricht übermitteln','📩',['Wendung'],'team','Kann ich etwas {{ausrichten}}?'],
+['eine Nachricht hinterlassen','پیام گذاشتن','hinterlassen (hinterlässt, hinterließ)','📱',['Wendung'],'team','Sie hat eine {{Nachricht hinterlassen}}.'],
+['sich vergewissern','اطمینان حاصل کردن','reflexiv | = sicherstellen','✅',['Verb','reflexiv'],'team','{{Vergewissern}} Sie sich, dass alles stimmt.'],
+['verbleiben','باقی ماندن / بدرود گفتن','verbleibt, verblieb, verblieben | formell','✉️',['Verb'],'team','Ich {{verbleibe}} mit freundlichen Grüßen.'],
+['das Hintergrundgeräusch','صدای پس‌زمینه','-e | Hintergrund + Geräusch','🔊',['Nomen'],'team','Das {{Hintergrundgeräusch}} stört das Gespräch.'],
+['das Event','رویداد / مراسم','-s | engl. Lehnwort','🎉',['Nomen','Team'],'team','Das {{Event}} war sehr erfolgreich.'],
+['die Teambildung','تیم‌سازی','nur Sg. | Teambuilding','🧩',['Nomen','Team'],'team','Die {{Teambildung}} ist sehr wichtig.'],
+['nahegelegen','واقع شده در نزدیکی','Adj | = benachbart','📍',['Adj'],'team','Das Restaurant ist {{nahegelegen}}.'],
+['voraussichtlich','احتمالاً / به احتمال زیاد','Adverb | = wahrscheinlich','🔮',['Adverb'],'team','Der Zug kommt {{voraussichtlich}} um 15 Uhr.'],
+['witzig','بامزه / خنده‌دار','Adj | = lustig','😄',['Adj'],'team','Er ist sehr {{witzig}}.'],
+['zwingen','مجبور کردن','zwingt, zwang, gezwungen | + zu + Inf.','💪',['Verb'],'team','Niemand kann uns {{zwingen}}.'],
+['eklig','چندش‌آور / ناخوشایند','Adj | = unangenehm (stark)','🤢',['Adj'],'team','Das ist wirklich {{eklig}}.'],
+['im Zentrum stehen','در مرکز توجه بودن','= im Mittelpunkt stehen','⭐',['Wendung'],'team','Der Kunde {{steht}} {{im Zentrum}}.'],
+['das Wohl der Gäste','رفاه مهمانان','Wohl + Gäste | = Wohlbefinden','😊',['Wendung'],'team','Das {{Wohl der Gäste}} hat Priorität.'],
+['vielfältig','متنوع','Adj | Vielfalt (Nomen)','🎨',['Adj'],'team','Die Aufgaben sind sehr {{vielfältig}}.'],
+['stets','همیشه / دائماً','Adverb | = immer (formell)','♾️',['Adverb'],'team','Sie ist {{stets}} pünktlich.'],
+['reibungslos','روان / بدون مشکل','Adj | = problemlos','✅',['Adj'],'team','Die Zusammenarbeit läuft {{reibungslos}}.'],
+['abwickeln über','انجام دادن از طریق','+ Akkusativ | abwickeln trennbar','📦',['Wendung'],'team','Das {{wickeln}} wir {{über}} das System {{ab}}.'],
+['sachlich reagieren auf','منطقی واکنش نشان دادن','sachlich + auf + Akk.','🧊',['Wendung'],'team','Man sollte {{sachlich}} {{auf}} Kritik {{reagieren}}.'],
+['in einem einwandfreien Zustand sein','در وضعیت بی‌نقص بودن','einwandfrei = ohne Fehler','✅',['Wendung'],'team','Das Gerät ist {{in einem einwandfreien Zustand}}.'],
+['einen Beruf ergreifen','یک حرفه را انتخاب کردن','ergreifen (ergriff, ergriffen)','💼',['Wendung'],'team','Er hat einen technischen Beruf {{ergriffen}}.'],
+['absolvieren','گذراندن / اتمام کردن','Akkusativ | = beenden','🎓',['Verb'],'team','Sie hat ein Studium {{absolviert}}.'],
+
+/* ════ KAP.7: ANGEBOTE & REKLAMATION ════ */
+['versehentlich','اشتباهی / از روی سهل‌انگاری','Adverb | = aus Versehen','😅',['Adverb'],'angebot','Ich habe {{versehentlich}} die falsche Datei gelöscht.'],
+['sich auskennen mit','بلد بودن در','+ Dativ | trennbar','🧠',['Verb','Präp','Dat'],'angebot','Er {{kennt}} sich gut {{mit}} Elektrotechnik {{aus}}.'],
+['der Preisnachlass','تخفیف قیمت','=e | Preis + Nachlass','💰',['Nomen','Wirtschaft'],'angebot','Wir gewähren einen {{Preisnachlass}}.'],
+['das A und O sein','اصل و اساس بودن','idiomatisch | = das Wichtigste','🔑',['Wendung'],'angebot','Qualität ist das {{A und O}}.'],
+['die Angemessenheit','تناسب / مناسب بودن','nur Sg. | angemessen (Adj)','⚖️',['Nomen'],'angebot','Die {{Angemessenheit}} des Preises wurde geprüft.'],
+['die Floskel','عبارت کلیشه‌ای','-n | = Redewendung (negativ)','🗣️',['Nomen'],'angebot','Bitte keine {{Floskeln}} in der E-Mail.'],
+['sich beziehen auf','اشاره داشتن به','+ Akkusativ | bezieht sich','📌',['Verb','Präp','Akk'],'angebot','Diese Frage {{bezieht}} sich {{auf}} den Vertrag.'],
+['verwirren','گیج کردن / سردرگم کردن','Akkusativ | = durcheinander bringen','😵',['Verb'],'angebot','Das hat mich {{verwirrt}}.'],
+['im Zweifelsfall','در صورت تردید','Adverb | = wenn man unsicher ist','🤔',['Wendung'],'angebot','{{Im Zweifelsfall}} fragen Sie uns.'],
+['prägnant','مختصر و مفید','Adj | = kurz und treffend','💎',['Adj'],'angebot','Die E-Mail ist kurz und {{prägnant}}.'],
+['abschreckend','ترسناک / دافع','Adj | abschrecken trennbar','😬',['Adj'],'angebot','Der Preis ist {{abschreckend}} hoch.'],
+['distanziert','سرد / فاصله‌دار','Adj | = reserviert (negativ)','🧊',['Adj'],'angebot','Sein Ton war sehr {{distanziert}}.'],
+['umständlich','پیچیده / دست‌وپاچلفتی','Adj | = kompliziert','🌀',['Adj'],'angebot','Die Erklärung ist sehr {{umständlich}}.'],
+['bezugnehmend auf','با اشاره به','+ Akkusativ | formell | in Bezug auf','📌',['Wendung'],'angebot','{{Bezugnehmend auf}} Ihr Schreiben vom 3. Mai...'],
+['tapezieren','کاغذ دیواری کردن','Akkusativ | die Tapete','🖼️',['Verb'],'angebot','Er hat das Zimmer {{tapeziert}}.'],
+['eine Anfrage stellen an','درخواست دادن به','stellen + an + Akkusativ','📋',['Wendung','Präp'],'angebot','Sie {{stellt}} eine {{Anfrage}} {{an}} den Lieferanten.'],
+['der Wasseranschluss','انشعاب آب','=e | Wasser + Anschluss','🚰',['Nomen'],'angebot','Der {{Wasseranschluss}} wurde installiert.'],
+['die Regenrinne','ناودان','-n | Regen + Rinne','🌧️',['Nomen'],'angebot','Die {{Regenrinne}} ist verstopft.'],
+['die Steckdose','پریز برق','-n | stecken + Dose','🔌',['Nomen'],'angebot','Es fehlt eine {{Steckdose}} im Büro.'],
+['anbringen','نصب کردن / جاسازی کردن','trennbar | bringt an, angebracht','🔧',['Verb','trennbar'],'angebot','Das Schild wurde {{angebracht}}.'],
+['durchführen','اجرا کردن','trennbar | = ausführen','⚙️',['Verb','trennbar'],'angebot','Die Reparatur wurde {{durchgeführt}}.'],
+['die Stromleitung','سیم‌کشی / خط برق','-en | Strom + Leitung','⚡',['Nomen'],'angebot','Die {{Stromleitung}} muss erneuert werden.'],
+['die Solaranlage','سیستم خورشیدی','-n | Solar + Anlage','☀️',['Nomen'],'angebot','Eine {{Solaranlage}} spart Energie.'],
+['die Gastherme','آبگرمکن گازی','-n | Gas + Therme','🔥',['Nomen'],'angebot','Die {{Gastherme}} ist ausgefallen.'],
+['ein Gerät warten','دستگاه را سرویس کردن','warten = pflegen','🔧',['Wendung'],'angebot','Das Gerät muss {{gewartet}} werden.'],
+['der Anhaltspunkt','سرنخ / نقطه تکیه','-e | = Hinweis','🔍',['Nomen'],'angebot','Das gibt mir einen ersten {{Anhaltspunkt}}.'],
+['der Kostenvoranschlag','برآورد هزینه','=e | = Angebot | KVA','💰',['Nomen','Wirtschaft'],'angebot','Wir senden Ihnen einen {{Kostenvoranschlag}}.'],
+['die Mehrwertsteuer','مالیات بر ارزش افزوده','nur Sg. | MwSt. | 19%','🧾',['Nomen','Wirtschaft'],'angebot','Alle Preise inkl. {{Mehrwertsteuer}}.'],
+['verbindlich','الزامی / قطعی','Adj | = bindend','📜',['Adj'],'angebot','Dieses Angebot ist {{verbindlich}}.'],
+['die Krankengymnastik','فیزیوتراپی','nur Sg. | = Physiotherapie','🏃',['Nomen'],'angebot','Er macht {{Krankengymnastik}}.'],
+['anschaffen','تهیه کردن / خرید کردن','trennbar | = kaufen','🛒',['Verb','trennbar'],'angebot','Wir müssen neue Geräte {{anschaffen}}.'],
+['das Trampolin','ترامپولین','-e | springen','🤸',['Nomen'],'angebot','Das {{Trampolin}} wird für den Kurs benötigt.'],
+['das Laufband','تردمیل / نوار نقاله','=er | laufen + Band','🏃',['Nomen'],'angebot','Das {{Laufband}} ist defekt.'],
+['die Komponente','قطعه / جزء','-n | = Teil','🔩',['Nomen'],'angebot','Eine {{Komponente}} fehlt.'],
+['die Verarbeitung','فرآوری / پردازش','-en | verarbeiten (Verb)','⚙️',['Nomen'],'angebot','Die {{Verarbeitung}} ist hochwertig.'],
+['der Akku','باتری / شارژر','-s | Akkumulator','🔋',['Nomen'],'angebot','Der {{Akku}} ist leer.'],
+['eine Beschwerde entgegennehmen','شکایت را دریافت کردن','entgegennehmen trennbar','📞',['Wendung'],'angebot','Wir nehmen Ihre {{Beschwerde}} {{entgegen}}.'],
+['die Koordination','هماهنگی','nur Sg. | koordinieren (Verb)','🔄',['Nomen'],'angebot','Die {{Koordination}} läuft gut.'],
+['jdm. ein Angebot unterbreiten','به کسی پیشنهاد دادن','unterbreiten (formell)','📋',['Wendung'],'angebot','Wir möchten Ihnen ein {{Angebot unterbreiten}}.'],
+['der Mengenrabatt','تخفیف حجمی','-e | bei großen Bestellungen','💰',['Nomen','Wirtschaft'],'angebot','Bei 100 Stück gibt es einen {{Mengenrabatt}}.'],
+['gewähren','اعطا کردن / تأمین کردن','Akkusativ | = geben','🤝',['Verb'],'angebot','Wir {{gewähren}} einen Rabatt.'],
+['zuzüglich','علاوه بر / به اضافه','zzgl. | Gegenteil: abzüglich','➕',['Präp'],'angebot','Preis {{zuzüglich}} MwSt.'],
+['abzüglich','کسر / منهای','abzgl. | Gegenteil: zuzüglich','➖',['Präp'],'angebot','Preis {{abzüglich}} Rabatt.'],
+['ein hohes Maß haben an','میزان بالایی از چیزی داشتن','Maß + an + Dativ','📊',['Wendung'],'angebot','Sie hat ein {{hohes Maß}} {{an}} Geduld.'],
+['hochwertig','باکیفیت','Adj | = qualitativ hochwertig','⭐',['Adj'],'angebot','Wir bieten nur {{hochwertige}} Produkte an.'],
+['der Effekt','تأثیر / اثر','-e | effektiv (Adj)','💥',['Nomen'],'angebot','Das hat einen großen {{Effekt}}.'],
+['die Gesamtsumme','جمع کل / مبلغ کل','-n | gesamt + Summe','💶',['Nomen','Wirtschaft'],'angebot','Die {{Gesamtsumme}} beträgt 500 Euro.'],
+['der Auftragseingang','ورود سفارش','=e | Auftrag + Eingang','📦',['Nomen','Wirtschaft'],'angebot','Der {{Auftragseingang}} ist gestiegen.'],
+['die Lieferzeit','زمان تحویل','-en | liefern + Zeit','🚚',['Nomen','Wirtschaft'],'angebot','Die {{Lieferzeit}} beträgt 3 Tage.'],
+['die Auftragsbestätigung','تأییدیه سفارش','-en | Auftrag + Bestätigung','✅',['Nomen','Wirtschaft'],'angebot','Die {{Auftragsbestätigung}} wurde gesendet.'],
+['an der falschen Adresse sein','جای اشتباه آمدن','idiomatisch | nicht zuständig sein','🚫',['Wendung'],'angebot','Da sind Sie {{an der falschen Adresse}}.'],
+['jdn. verweisen an','کسی را ارجاع دادن به','+ Akkusativ | verweist, verwies, verwiesen','👉',['Wendung','Präp'],'angebot','Er wurde {{an}} die Fachabteilung {{verwiesen}}.'],
+['nachhaken','پیگیری کردن','trennbar | = nachfragen','🔍',['Verb','trennbar'],'angebot','Ich {{hake}} morgen {{nach}}.'],
+['die Geldrückgabe','بازپرداخت پول','-n | Geld + Rückgabe','💶',['Nomen'],'angebot','Wir bieten eine {{Geldrückgabe}} an.'],
+['der Verzicht auf','انصراف از','+ Akkusativ | verzichten auf','🚫',['Nomen','Präp'],'angebot','Der {{Verzicht}} {{auf}} den Rabatt ist möglich.'],
+['die Erstattung','بازپرداخت','-en | erstatten (Verb)','💶',['Nomen'],'angebot','Sie erhalten eine vollständige {{Erstattung}}.'],
+['die Entschädigung','غرامت','-en | entschädigen (Verb)','⚖️',['Nomen'],'angebot','Als {{Entschädigung}} erhalten Sie einen Gutschein.'],
+['der Ausgleich','جبران / تعادل','-e | ausgleichen trennbar','⚖️',['Nomen'],'angebot','Als {{Ausgleich}} bieten wir eine Gutschrift.'],
+['bedauerlich','متأسفانه / تأسف‌آور','Adj | bedauern (Verb)','😞',['Adj'],'angebot','Das ist sehr {{bedauerlich}}.'],
+['kurzfristig','کوتاه‌مدت / فوری','Adj | Gegenteil: langfristig','⚡',['Adj'],'angebot','Wir können {{kurzfristig}} liefern.'],
+['zur Verfügung stehen','در اختیار بودن','= verfügbar sein','🤲',['Wendung'],'angebot','Ich {{stehe}} Ihnen {{zur Verfügung}}.'],
+['der Werbezweck','هدف تبلیغاتی','-e | Werbung + Zweck','📢',['Nomen'],'angebot','Das dient zu {{Werbezwecken}}.'],
+['der Mehrwert','ارزش افزوده','nur Sg. | mehr + Wert','💎',['Nomen'],'angebot','Das bringt einen echten {{Mehrwert}}.'],
+['die Druckerei','چاپخانه','-en | drucken (Verb)','🖨️',['Nomen'],'angebot','Die {{Druckerei}} liefert morgen.'],
+['vereinzelt','گاه‌گاهی / بعضاً','Adverb | = gelegentlich','🌱',['Adverb'],'angebot','Es gibt {{vereinzelt}} Beschwerden.'],
+['künftig','در آینده / از این پس','Adj/Adverb | = zukünftig','🔮',['Adj'],'angebot','{{Künftig}} reagieren wir schneller.'],
+
+/* ════ KAP.8: GEFÜHLE & CHARAKTER ════ */
+['selbstbewusst','اعتماد به نفس داشتن','Adj | Selbstbewusstsein (Nomen)','💪',['Adj','Gefühl'],'gefuehl','Sie ist sehr {{selbstbewusst}}.'],
+['schüchtern','خجالتی / کمرو','Adj | Schüchternheit (Nomen)','🙈',['Adj','Gefühl'],'gefuehl','Als Kind war er sehr {{schüchtern}}.'],
+['verärgert','عصبانی / ناراحت','Adj | verärgern (Verb)','😠',['Adj','Gefühl'],'gefuehl','Sie ist {{verärgert}} über die Verspätung.'],
+['glücklich','خوشحال / سعادتمند','Adj | das Glück (Nomen)','😊',['Adj','Gefühl'],'gefuehl','Er ist sehr {{glücklich}} mit seinem Job.'],
+['genervt','کلافه / عصبانی','Adj | nerven (Verb)','😤',['Adj','Gefühl'],'gefuehl','Sie ist von dem Lärm {{genervt}}.'],
+['erstaunt','متعجب','Adj | erstaunen (Verb) | = überrascht','😲',['Adj','Gefühl'],'gefuehl','Er war sehr {{erstaunt}} über die Neuigkeit.'],
+['bedrückt','افسرده / غمگین','Adj | bedrücken (Verb)','😔',['Adj','Gefühl'],'gefuehl','Er wirkt heute sehr {{bedrückt}}.'],
+['überrascht','شگفت‌زده','Adj | überraschen (Verb)','😲',['Adj','Gefühl'],'gefuehl','Ich bin sehr {{überrascht}}.'],
+['eingebildet','متکبر / خودبین','Adj | sich einbilden | = arrogant','🙄',['Adj','Charakter'],'gefuehl','Er ist sehr {{eingebildet}}.'],
+['verwundert','حیران / متعجب','Adj | verwundern (Verb) | = erstaunt','😮',['Adj','Gefühl'],'gefuehl','Sie war sehr {{verwundert}} darüber.'],
+['begeistert','مشتاق / ذوق‌زده','Adj | begeistern (Verb) | = enthusiastisch','🤩',['Adj','Gefühl'],'gefuehl','Sie ist {{begeistert}} von dem Projekt.'],
+['verblüfft','مبهوت / حیرت‌زده','Adj | verblüffen (Verb)','😮',['Adj','Gefühl'],'gefuehl','Er war total {{verblüfft}}.'],
+['besorgt','نگران','Adj | sich Sorgen machen','😟',['Adj','Gefühl'],'gefuehl','Die Eltern sind {{besorgt}}.'],
+['euphorisch','سرخوش / خوشحال افراطی','Adj | Euphorie (Nomen)','🎉',['Adj','Gefühl'],'gefuehl','Sie ist {{euphorisch}} nach dem Erfolg.'],
+['traurig','غمگین','Adj | die Traurigkeit (Nomen)','😢',['Adj','Gefühl'],'gefuehl','Er ist sehr {{traurig}}.'],
+['entzückt','مجذوب / شیفته','Adj | entzücken (Verb)','😍',['Adj','Gefühl'],'gefuehl','Das Baby ist wirklich {{entzückend}}.'],
+['wütend','خشمگین','Adj | die Wut (Nomen)','😡',['Adj','Gefühl'],'gefuehl','Sie ist {{wütend}} auf ihn.'],
+['frustriert','ناامید / دلسرد','Adj | Frustration (Nomen)','😤',['Adj','Gefühl'],'gefuehl','Er ist sehr {{frustriert}}.'],
+['zurückhaltend','محتاط / درون‌گرا','Adj | = reserviert','🤐',['Adj','Charakter'],'gefuehl','Sie ist {{zurückhaltend}} und bescheiden.'],
+['arrogant','مغرور / متکبر','Adj | Arroganz (Nomen)','😤',['Adj','Charakter'],'gefuehl','Er verhält sich sehr {{arrogant}}.'],
+['überheblich','متکبر / خودشیفته','Adj | Überheblichkeit (Nomen)','😤',['Adj','Charakter'],'gefuehl','Sein {{überhebliches}} Verhalten nervt alle.'],
+['empört','خشمگین / برافروخته','Adj | empören (Verb) | = entrüstet','😡',['Adj','Gefühl'],'gefuehl','Die Mitarbeiter sind {{empört}}.'],
+['bescheiden','فروتن / متواضع','Adj | Bescheidenheit (Nomen)','🙏',['Adj','Charakter'],'gefuehl','Er ist sehr {{bescheiden}}.'],
+['entspannt','آرام / بی‌تنش','Adj | sich entspannen | Entspannung','😌',['Adj','Gefühl'],'gefuehl','Sie wirkt heute sehr {{entspannt}}.'],
+['die Überheblichkeit','تکبر / خودشیفتگی','nur Sg. | überheblich (Adj)','😤',['Nomen','Charakter'],'gefuehl','Seine {{Überheblichkeit}} macht ihn unbeliebt.'],
+['die Wut','خشم','nur Sg. | wütend (Adj)','😡',['Nomen','Gefühl'],'gefuehl','Er konnte seine {{Wut}} nicht kontrollieren.'],
+['die Begeisterung','شوق و ذوق','nur Sg. | begeistert (Adj)','🤩',['Nomen','Gefühl'],'gefuehl','Die {{Begeisterung}} war groß.'],
+['die Bescheidenheit','فروتنی / تواضع','nur Sg. | bescheiden (Adj)','🙏',['Nomen','Charakter'],'gefuehl','{{Bescheidenheit}} ist eine Tugend.'],
+['die Schüchternheit','خجالتی بودن','nur Sg. | schüchtern (Adj)','🙈',['Nomen','Charakter'],'gefuehl','Er leidet unter seiner {{Schüchternheit}}.'],
+['das Selbstbewusstsein','اعتماد به نفس','nur Sg. | selbstbewusst (Adj)','💪',['Nomen','Charakter'],'gefuehl','Sie hat viel {{Selbstbewusstsein}}.'],
+
+/* ════ KAP.10: ROBOTERWELT & ZUKUNFT ════ */
+/* Auftakt */
+['die Umschulung','بازآموزی / آموزش مجدد','-en | umschulen (Verb)','🔄',['Nomen','Beruf'],'zukunft','Er macht eine {{Umschulung}} zum IT-Techniker.'],
+['analog','آنالوگ / سنتی','Adj | Gegenteil: digital','📻',['Adj'],'zukunft','Das Formular ist noch {{analog}}.'],
+['automatisiert','اتوماتیک / خودکار','Adj | automatisieren (Verb) | Automatisierung','🤖',['Adj'],'zukunft','Viele Jobs werden heute {{automatisiert}}.'],
+['alternd','در حال پیر شدن','Adj | altern (Verb) | eine ~e Bevölkerung','👴',['Adj'],'zukunft','Die {{alternde}} Bevölkerung braucht mehr Pflege.'],
+['der Pflegeroboter','ربات مراقبتی','- | Pflege + Roboter','🤖',['Nomen','Tech'],'zukunft','Der {{Pflegeroboter}} hilft alten Menschen.'],
+['die Fachkraft','نیروی متخصص','=e | Fachkräftemangel','👷',['Nomen','Beruf'],'zukunft','Es fehlen {{Fachkräfte}} in der IT-Branche.'],
+['jdm. auf die Nerven gehen','اعصاب کسی رو خرد کردن','idiomatisch | = nerven, stören','😤',['Wendung'],'zukunft','Der Lärm {{geht}} mir {{auf die Nerven}}.'],
+['von überall arbeiten','از هر جا کار کردن','= remote arbeiten | Homeoffice','🌍',['Wendung'],'zukunft','Man kann {{von überall}} {{arbeiten}}.'],
+/* Modul 1 - Roboterwelt */
+['eine Tätigkeit ausführen','یک فعالیت انجام دادن','ausführen trennbar | = erledigen','⚙️',['Wendung'],'zukunft','Roboter können einfache {{Tätigkeiten ausführen}}.'],
+['die Empathie','همدلی / احساس همدردی','nur Sg. | empathisch (Adj)','❤️',['Nomen'],'zukunft','{{Empathie}} kann kein Roboter ersetzen.'],
+['das Verhandlungsgeschick','مهارت مذاکره','nur Sg. | Verhandlung + Geschick','🤝',['Nomen'],'zukunft','Sein {{Verhandlungsgeschick}} ist beeindruckend.'],
+['die Überzeugungskraft','قدرت متقاعد کردن','nur Sg. | überzeugen + Kraft','💪',['Nomen'],'zukunft','Sie hat eine starke {{Überzeugungskraft}}.'],
+['interagieren mit','تعامل کردن با','+ Dativ | Interaktion (Nomen)','🔄',['Verb','Präp','Dat'],'zukunft','Roboter können mit Menschen {{interagieren}}.'],
+['auf ein Gerät übertragen','به دستگاهی انتقال دادن','übertragen (überträgt, übertrug) | trennbar','📲',['Wendung'],'zukunft','Daten werden {{auf das Gerät übertragen}}.'],
+['steuern','کنترل کردن / هدایت کردن','Akkusativ | = leiten, kontrollieren','🎮',['Verb'],'zukunft','Er {{steuert}} den Roboter per App.'],
+['entlasten','سبک کردن بار / کمک کردن','Akkusativ | Entlastung (Nomen)','🏋️',['Verb'],'zukunft','Roboter sollen Menschen {{entlasten}}.'],
+['eigenständig','مستقل','Adj | = selbstständig','🦅',['Adj'],'zukunft','Die KI arbeitet {{eigenständig}}.'],
+['autonom','مستقل / خودمختار','Adj | Autonomie (Nomen)','🤖',['Adj'],'zukunft','Autonome Autos fahren {{autonom}}.'],
+['betroffen von','تحت تأثیر','+ Dativ | betreffen (betrifft, betraf)','⚠️',['Adj','Präp','Dat'],'zukunft','Viele Jobs sind {{betroffen}} {{von}} der Automatisierung.'],
+['die Prognose','پیش‌بینی','-n | prognostizieren (Verb)','🔮',['Nomen'],'zukunft','Die {{Prognose}} ist positiv.'],
+['erproben','آزمایش کردن / آزمون گرفتن','Akkusativ | = testen | Erprobung','🧪',['Verb'],'zukunft','Die Technologie wird noch {{erprobt}}.'],
+['die Einsatzmöglichkeit','امکان استفاده / کاربرد','-en | Einsatz + Möglichkeit','💡',['Nomen'],'zukunft','Es gibt viele {{Einsatzmöglichkeiten}} für KI.'],
+['einleuchtend','قابل درک / روشن','Adj | = verständlich, logisch','💡',['Adj'],'zukunft','Das ist sehr {{einleuchtend}}.'],
+/* Modul 2 - Selbstständig */
+['der/die Erwerbstätige','شاغل','-n | Erwerb + tätig | = Arbeitnehmer','💼',['Nomen','Beruf'],'zukunft','Die Zahl der {{Erwerbstätigen}} steigt.'],
+['der/die Gründer/in','بنیان‌گذار / استارتاپ‌کار','-/-nen | gründen (Verb)','🚀',['Nomen','Beruf'],'zukunft','Die {{Gründer}} haben eine App entwickelt.'],
+['die Existenzgründung','راه‌اندازی کسب‌وکار','-en | Existenz + Gründung','🏢',['Nomen','Wirtschaft'],'zukunft','Bei der {{Existenzgründung}} gibt es viel zu beachten.'],
+['der Businessplan','طرح کسب‌وکار','=e | engl. | Geschäftsplan','📋',['Nomen','Wirtschaft'],'zukunft','Zuerst schreibt man einen {{Businessplan}}.'],
+['realistisch','واقع‌بینانه','Adj | Realismus (Nomen) | Gegenteil: unrealistisch','🎯',['Adj'],'zukunft','Bitte seien Sie {{realistisch}}.'],
+['infrage kommen','مطرح بودن / قابل توجه بودن','= in Frage kommen | trennbar','🤔',['Wendung'],'zukunft','Das {{kommt}} nicht {{infrage}}.'],
+['die Bewilligung','مجوز / تصویب','-en | bewilligen (Verb)','✅',['Nomen','Wirtschaft'],'zukunft','Die {{Bewilligung}} wurde erteilt.'],
+['bewilligen','مجوز دادن / تصویب کردن','Akkusativ | = genehmigen','✅',['Verb'],'zukunft','Der Antrag wurde {{bewilligt}}.'],
+['die Verlängerung','تمدید / افزایش','-en | verlängern (Verb)','⏳',['Nomen'],'zukunft','Die {{Verlängerung}} des Visums wurde beantragt.'],
+['die Gewährung','اعطا / تأمین','nur Sg. | gewähren (Verb)','🤝',['Nomen'],'zukunft','Die {{Gewährung}} des Darlehens ist geregelt.'],
+['Widerspruch einlegen','اعتراض کردن','einlegen trennbar | formal','⚖️',['Wendung'],'zukunft','Er hat {{Widerspruch}} {{eingelegt}}.'],
+['der Nachweis','مدرک / سند','-e | nachweisen (Verb)','📜',['Nomen'],'zukunft','Bitte legen Sie einen {{Nachweis}} vor.'],
+['beifügen','پیوست کردن','trennbar | = hinzufügen | Anlage','📎',['Verb','trennbar'],'zukunft','Bitte {{fügen}} Sie die Unterlagen {{bei}}.'],
+['loslegen','شروع کردن / دست به کار شدن','trennbar | = beginnen (ugs.)','🚀',['Verb','trennbar'],'zukunft','Wann können wir {{loslegen}}?'],
+['aus eigener Kraft','با نیروی خودم / به تنهایی','idiomatisch | = selbstständig','💪',['Wendung'],'zukunft','Er hat das {{aus eigener Kraft}} geschafft.'],
+['die Daumen drücken','انگشت نگه داشتن / آرزوی موفقیت','drücken + Dativ | = jdm. Glück wünschen','🤞',['Wendung'],'zukunft','Ich {{drücke}} dir {{die Daumen}}!'],
+/* Modul 3 - Berufe der Zukunft */
+['der Arbeitsmarkt','بازار کار','=e | Arbeitsmarkt + Situation','📊',['Nomen','Beruf'],'zukunft','Der {{Arbeitsmarkt}} verändert sich.'],
+['die Neuerung','نوآوری','-en | neu + -erung','💡',['Nomen'],'zukunft','Diese {{Neuerung}} ist sehr wichtig.'],
+['zukunftsfähig','آینده‌نگر / پایدار','Adj | Zukunft + fähig','🔮',['Adj'],'zukunft','Das Modell ist nicht {{zukunftsfähig}}.'],
+['entstehen','به وجود آمدن','entsteht, entstand, entstanden | = werden','🌱',['Verb'],'zukunft','Neue Jobs {{entstehen}} durch die KI.'],
+['sich befassen mit','سروکار داشتن با','+ Dativ | reflexiv | = beschäftigen mit','📚',['Verb','Präp','Dat'],'zukunft','Er {{befasst}} sich {{mit}} KI-Forschung.'],
+['die Interaktion','تعامل / ارتباط متقابل','-en mit + D. | interagieren (Verb)','🔄',['Nomen'],'zukunft','Die {{Interaktion}} mit Kunden ist wichtig.'],
+['der Social-Media-Kanal','کانال شبکه اجتماعی','=e | SM + Kanal','📱',['Nomen','Tech'],'zukunft','Der {{Social-Media-Kanal}} hat viele Follower.'],
+['der/die Quereinsteiger/in','فرد تازه‌وارد از حوزه دیگر','-/-nen | quer + einsteigen','🔀',['Nomen','Beruf'],'zukunft','Sie ist {{Quereinsteigerin}} in der IT.'],
+['gefragt','مورد تقاضا / مطلوب','Adj | fragen → gefragt sein','💎',['Adj'],'zukunft','IT-Kenntnisse sind sehr {{gefragt}}.'],
+['unübersichtlich','نامرتب / گیج‌کننده','Adj | Gegenteil: übersichtlich','🌀',['Adj'],'zukunft','Die Situation ist sehr {{unübersichtlich}}.'],
+['komplex','پیچیده','Adj | Komplexität (Nomen)','🧩',['Adj'],'zukunft','Das System ist sehr {{komplex}}.'],
+['sich zurechtfinden in','راه پیدا کردن در','+ Dativ | reflexiv | trennbar','🧭',['Verb','Präp','Dat'],'zukunft','Er findet sich schnell {{in}} neuen Situationen {{zurecht}}.'],
+['die Flexibilität','انعطاف‌پذیری','nur Sg. | flexibel (Adj)','🔄',['Nomen'],'zukunft','{{Flexibilität}} ist im Beruf sehr wichtig.'],
+/* Modul 4 - Man lernt nie aus */
+['sich weiterqualifizieren','مهارت خود را ارتقا دادن','reflexiv | Weiterqualifizierung','📈',['Verb','reflexiv'],'zukunft','Er hat sich {{weiterqualifiziert}}.'],
+['gut aufgestellt sein für','آماده بودن برای','= vorbereitet sein | + Akkusativ','✅',['Wendung','Präp'],'zukunft','Wir sind {{gut aufgestellt}} {{für}} die Zukunft.'],
+['sich lohnen','ارزش داشتن','reflexiv | = sich rentieren','💰',['Verb','reflexiv'],'zukunft','Das {{lohnt}} sich wirklich.'],
+['die Gehaltserhöhung','افزایش حقوق','-en | Gehalt + Erhöhung','💶',['Nomen'],'zukunft','Er hat eine {{Gehaltserhöhung}} bekommen.'],
+['sich durchsetzen','پیروز شدن / موفق شدن','trennbar | reflexiv | = gewinnen','💪',['Verb','reflexiv'],'zukunft','Sie hat sich {{durchgesetzt}}.'],
+['den Eindruck erzeugen','ایجاد تأثیر کردن','erzeugen + Akkusativ','🎭',['Wendung'],'zukunft','Er {{erzeugt}} einen professionellen {{Eindruck}}.'],
+['Erwartungen wecken','انتظار ایجاد کردن','wecken + Akkusativ','💭',['Wendung'],'zukunft','Das {{weckt}} hohe {{Erwartungen}}.'],
+['die Selbsteinschätzung','خودارزیابی','-en | selbst + einschätzen','🪞',['Nomen'],'zukunft','Realistische {{Selbsteinschätzung}} ist wichtig.'],
+['zielführend','هدفمند','Adj | Ziel + führend','🎯',['Adj'],'zukunft','Das ist eine {{zielführende}} Strategie.'],
+['schlagfertig','سریع‌الجواب / تیزبین','Adj | Schlagfertigkeit (Nomen)','⚡',['Adj'],'zukunft','Er ist sehr {{schlagfertig}} in Diskussionen.'],
+['selbstsicher','مطمئن به خود','Adj | = selbstbewusst','💪',['Adj'],'zukunft','Sie tritt sehr {{selbstsicher}} auf.'],
+['angebracht','مناسب / به جا','Adj | anbringen trennbar','✅',['Adj'],'zukunft','Humor ist hier nicht {{angebracht}}.'],
+['relevant','مرتبط / مهم','Adj | Relevanz (Nomen)','⭐',['Adj'],'zukunft','Das ist für uns sehr {{relevant}}.'],
+['bedenken','در نظر گرفتن / فکر کردن','bedenkt, bedachte, bedacht | = berücksichtigen','🤔',['Verb'],'zukunft','Bitte {{bedenken}} Sie die Konsequenzen.'],
+['finanzieren','تأمین مالی کردن','Akkusativ | Finanzierung (Nomen)','💶',['Verb'],'zukunft','Wie wollen Sie das {{finanzieren}}?'],
+
+/* ════ REDEMITTEL & PHRASEN ════ */
+/* die eigene Meinung */
+['die eigene Meinung ausdrücken','بیان کردن نظر خود','Ich bin der Meinung, dass … | Meiner Meinung nach …','🗣️',['Redemittel','Meinung'],'redemittel','„{{Meiner Meinung nach}} ist das nicht richtig."'],
+['Ich bin der Meinung, dass …','به نظر من …','Meinungsäußerung | B2 formell','💬',['Redemittel','Meinung'],'redemittel','„{{Ich bin der Meinung}}, dass Roboter uns helfen."'],
+['Das ist mir … wert.','این برایم … ارزش دارد','Werturteil | = Das finde ich wichtig','⭐',['Redemittel','Meinung'],'redemittel','„Qualität {{ist mir}} viel {{wert}}."'],
+
+/* Argumente */
+['ein Argument nennen','یک استدلال مطرح کردن','Ein Argument, das … spricht, ist … | Viele denken, dass …','⚖️',['Redemittel','Argumentation'],'redemittel','„{{Ein Argument}}, das für KI {{spricht}}, ist die Effizienz."'],
+['Einem Argument zustimmen','موافقت با استدلال','Deine Argumente finde ich {{einleuchtend}} | Ich stimme dir zu, dass …','✅',['Redemittel','Argumentation'],'redemittel','„{{Ich stimme dir zu}}, dass das wichtig ist."'],
+['ein Gegenargument nennen','ضد استدلال مطرح کردن','Das stimmt zwar, aber … | Das kann man zwar sagen, doch …','⚖️',['Redemittel','Argumentation'],'redemittel','„{{Das stimmt zwar}}, {{aber}} es gibt auch Nachteile."'],
+['Man muss auch daran denken, dass …','باید به این هم فکر کرد که …','= berücksichtigen | formell','🤔',['Redemittel','Argumentation'],'redemittel','„{{Man muss auch daran denken}}, dass nicht alle profitieren."'],
+
+/* Nachdruck */
+['Nachdruck verleihen','تأکید کردن','Aber das ist (nicht) das, was ich machen möchte.','💪',['Redemittel','Nachdruck'],'redemittel','„{{Aber denken Sie nicht}}, dass das einfach ist?"'],
+
+/* Verstehen */
+['Verstehen signalisieren','نشان دادن که فهمیدی','Ah ja/Okay | Ich verstehe | Das habe ich mir gedacht','✅',['Redemittel','Kommunikation'],'redemittel','„{{Ah ja, das ist klar}}. Danke für die Erklärung."'],
+['Nichtverstehen signalisieren','نشان دادن که نفهمیدی','Entschuldigung, ich habe das nicht ganz verstanden | Unklar ist mir noch …','❓',['Redemittel','Kommunikation'],'redemittel','„{{Unklar ist mir noch}}, was das genau bedeutet."'],
+['nachfragen und um Wiederholung bitten','درخواست تکرار یا توضیح','Habe ich Sie richtig verstanden? | Könnten Sie das noch einmal wiederholen?','🔁',['Redemittel','Kommunikation'],'redemittel','„{{Könnten Sie mir noch mal erklären}}, wie das funktioniert?"'],
+
+/* Gefallen */
+['Gefallen ausdrücken','ابراز خوشایندی','Mir gefällt besonders … | Positiv ist/war … | Sehr zufrieden bin ich mit …','😊',['Redemittel','Bewertung'],'redemittel','„{{Mir gefällt besonders}}, dass das Design modern ist."'],
+['Missfallen ausdrücken','ابراز ناخوشایندی','Nicht so gut gefällt mir … | Negativ ist/war … | Ich komme nicht so gut klar damit …','😟',['Redemittel','Bewertung'],'redemittel','„{{Nicht so gut gefällt mir}}, dass es teuer ist."'],
+
+/* Kritik */
+['konstruktiv mit Kritik umgehen','به طور سازنده با انتقاد کنار آمدن','Das stimmt, aber … | Das haben Sie falsch verstanden | Ich kann gut nachvollziehen, dass …','🏗️',['Redemittel','Konflikt'],'redemittel','„{{Das kann ich gut verstehen}}, aber ich sehe es anders."'],
+['Kritik zurückweisen','رد کردن انتقاد','Das haben Sie falsch verstanden | Es stimmt nicht, dass … | Das sehe ich ganz anders','💬',['Redemittel','Konflikt'],'redemittel','„{{Das sehe ich ganz anders}} – das war so nicht gemeint."'],
+['Kritik annehmen','پذیرفتن انتقاد','Ja, ich habe auch gemerkt, dass … | Danke, dass Sie mich darauf hingewiesen haben.','✅',['Redemittel','Konflikt'],'redemittel','„{{Danke, dass Sie mich darauf hingewiesen haben}}."'],
+
+/* Vortrag */
+['einen Vortrag halten – Einleitung','شروع یک سخنرانی','Ich spreche über … | Mein Thema lautet … | Bei mir geht es um …','🎤',['Redemittel','Vortrag'],'redemittel','„{{Mein Thema lautet}} Künstliche Intelligenz im Alltag."'],
+['einen Vortrag halten – Schluss','پایان دادن به سخنرانی','Zusammenfassend möchte ich sagen … | Lassen Sie mich zum Schluss noch sagen: …','🎤',['Redemittel','Vortrag'],'redemittel','„{{Zusammenfassend möchte ich sagen}}, dass KI Chancen bietet."'],
+['eine Produktpräsentation – Einleitung','مقدمه ارائه محصول','Ich freue mich, Ihnen heute … zu präsentieren | Herzlichen Dank für die Einladung …','🎯',['Redemittel','Präsentation'],'redemittel','„{{Ich freue mich}}, Ihnen heute unser neues Produkt {{zu präsentieren}}."'],
+['Interesse wecken','جلب توجه کردن (ارائه)','Wussten Sie eigentlich, dass …? | Ist Ihnen schon einmal aufgefallen, dass …?','👀',['Redemittel','Präsentation'],'redemittel','„{{Wussten Sie eigentlich}}, dass 80% aller Jobs sich ändern werden?"'],
+['Aussagen wiedergeben','بازگفتن اظهارات دیگران','… hat gesagt, dass … | Er/Sie braucht … | Sein/Ihr Wunsch ist, …','💬',['Redemittel','Berichten'],'redemittel','„{{Er hat gesagt}}, dass er mehr Zeit braucht."'],
+['Aussagen anderer erläutern','توضیح دادن اظهارات دیگران','… hat gesagt/meint/denkt, dass … | Er/Sie findet wichtig/gut, dass …','💬',['Redemittel','Berichten'],'redemittel','„{{Er/Sie betont}}, dass Qualität wichtiger als Preis ist."'],
+
+/* Wünsche/Zukunft */
+['Wünsche und Ziele äußern','بیان آرزوها و اهداف','Ich habe die Absicht, … | Mein Ziel ist es, … | Ich hätte Lust, …','🎯',['Redemittel','Zukunft'],'redemittel','„{{Mein Ziel ist es}}, eine eigene Firma zu gründen."'],
+['über die Zukunft sprechen','درباره آینده صحبت کردن','Ich weiß noch nicht, ob … | Ich hoffe, dass … | Ich befürchte, dass …','🔮',['Redemittel','Zukunft'],'redemittel','„{{Ich befürchte}}, dass viele Jobs verschwinden werden."'],
+
+/* Defekte */
+['über einen Defekt informieren','درباره نقص اطلاع دادن','Es gibt ein Problem mit … | … funktioniert/läuft/geht nicht richtig | … ist kaputt','⚠️',['Redemittel','Technik'],'redemittel','„{{Es gibt ein Problem mit}} dem Drucker – er {{funktioniert nicht richtig}}."'],
+['Ratschläge zur Behebung geben','پیشنهاد رفع مشکل دادن','Vielleicht muss … gereinigt/ausgewechselt werden | Haben Sie schon … überprüft?','🔧',['Redemittel','Technik'],'redemittel','„{{Vielleicht muss}} die Patrone {{ausgewechselt werden}}."'],
+
+/* Rat */
+['um Rat fragen','کمک یا مشورت خواستن','Ich bin mir nicht sicher, ob … | Was würdest du an meiner Stelle machen?','🤔',['Redemittel','Kommunikation'],'redemittel','„{{Was würdest du an meiner Stelle machen}}?"'],
+['einen Rat geben','مشورت دادن','An deiner Stelle würde ich … | Ich kann dir nur raten, … | Vielleicht solltest du …','💡',['Redemittel','Kommunikation'],'redemittel','„{{An deiner Stelle würde ich}} zuerst den Chef fragen."'],
+
+/* Konflikt */
+['ein Problem ansprechen (Konflikt)','مطرح کردن یک مشکل (تعارض)','Ich möchte gern mit Ihnen/dir über … sprechen | Mir ist aufgefallen, dass …','🗣️',['Redemittel','Konflikt'],'redemittel','„{{Mir ist aufgefallen}}, dass wir unterschiedliche Meinungen haben."'],
+['Lösungen vorschlagen','پیشنهاد راه‌حل دادن','Was halten Sie/hältst du davon, …? | Ich würde mir wünschen, dass … | Wie wäre es, wenn …?','💡',['Redemittel','Konflikt'],'redemittel','„{{Wie wäre es}}, wenn wir das gemeinsam besprechen?"'],
+
+/* Small Talk */
+['Small Talk führen – beginnen','شروع کردن یک گفتگوی سبک','Im Moment regnet es … | Wie war denn Ihr Wochenende? | Interessanter Vortrag, oder?','💬',['Redemittel','SmallTalk'],'redemittel','„{{Wie war denn Ihr Wochenende}}? Haben Sie etwas Schönes unternommen?"'],
+['Small Talk – Thema wechseln','تغییر موضوع در گفتگوی سبک','Ach, da fällt mir ein: … | Übrigens …','🔄',['Redemittel','SmallTalk'],'redemittel','„{{Übrigens}}, haben Sie schon das neue Projekt gesehen?"'],
+['Small Talk – beenden','پایان دادن به گفتگوی سبک','Es war schön/nett, Sie zu treffen | Gut, dann wünsche ich Ihnen noch einen schönen Tag.','👋',['Redemittel','SmallTalk'],'redemittel','„{{Es war nett}}, Sie zu treffen. Auf Wiedersehen!"'],
+['duzen anbieten','پیشنهاد دادن برای استفاده از du','Wir können uns gern duzen | Sollen wir nicht Du sagen?','🤝',['Redemittel','Höflichkeit'],'redemittel','„{{Wir können uns gern duzen}} – ich heiße Maria."'],
+
+/* Telefon */
+['ein Telefongespräch beginnen','شروع کردن یک مکالمه تلفنی','Guten Tag, mein Name ist … | Ich rufe an, weil … | Es geht um Folgendes …','📞',['Redemittel','Telefon'],'redemittel','„{{Guten Tag}}, hier {{spricht}} Müller. Ich rufe an, weil ich eine Frage habe."'],
+['ein Telefongespräch beenden','پایان دادن به مکالمه تلفنی','Das hat mir sehr geholfen, vielen Dank | Auf Wiederhören!','📞',['Redemittel','Telefon'],'redemittel','„{{Das hat mir sehr geholfen}}. Auf Wiederhören!"'],
+['eine Nachricht am Telefon hinterlassen','پیام تلفنی گذاشتن','Könnte ich … / Möchten Sie eine Nachricht für … hinterlassen?','📱',['Redemittel','Telefon'],'redemittel','„{{Könnten Sie}} Herrn Müller {{etwas ausrichten}}?"'],
+
+/* Messestand */
+['Gespräch am Messestand beginnen','شروع کردن گفتگو در غرفه','Kann ich Ihnen behilflich sein? | Ich sehe, Sie interessieren sich für unseren Stand.','🏛️',['Redemittel','Messe'],'redemittel','„{{Kann ich Ihnen behilflich sein}}? Was interessiert Sie?"'],
+['Interesse an Produkten wecken','جلب توجه به محصولات','Wir haben hier etwas ganz Besonderes … | Das ist ein ganz neues Material/Produkt …','📢',['Redemittel','Messe'],'redemittel','„{{Wir haben hier etwas ganz Besonderes}} – schauen Sie mal!"'],
+['ablehnend reagieren (Messe)','محترمانه رد کردن (غرفه)','Vielen Dank, ich sehe mich nur mal um | Danke, ich muss leider gleich weiter.','🚶',['Redemittel','Messe'],'redemittel','„{{Danke}}, ich {{muss leider gleich weiter}}."'],
+];
+
+/* ════════════════════════════════════
+   MODULE 17: BOOTSTRAP / INIT
+════════════════════════════════════ */
+
+/* ── localStorage shorthands ── */
+function LS(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
+function LSset(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+function LSdel(key) { try { localStorage.removeItem(key); } catch(e) {} }
+
+function showLoad(msg, sub) {
+  const m = document.getElementById('load-msg');
+  const s = document.getElementById('load-sub');
+  if (m) m.textContent = msg || '';
+  if (s) s.textContent = sub || '';
+}
+function hideLoadScreen() {
+  const ls = document.getElementById('loading-screen');
+  if (ls) ls.classList.add('hidden');
+  const app = document.getElementById('app');
+  if (app) app.style.display = 'flex';
+}
+function showLoadScreen() {
+  const ls = document.getElementById('loading-screen');
+  if (ls) { ls.classList.remove('hidden'); ls.style.display = 'flex'; }
+  const app = document.getElementById('app');
+  if (app) app.style.display = 'none';
+}
+
+/* ── Key page ── */
+function showKeyPage(err) {
+  STATE.currentPage = 'setup';
+  document.querySelectorAll('.ni').forEach(el => el.classList.remove('on'));
+  const titleEl = document.getElementById('page-title');
+  if (titleEl) titleEl.textContent = 'API Key';
+  const b = document.getElementById('page-body');
+  if (!b) return;
+  err = err || '';
+  const savedKey = LS('sb_api_key') || '';
+  const errHtml = err ? '<div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:var(--ra);padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:14px;line-height:1.6">' + err + '</div>' : '';
+  b.innerHTML =
+    '<div style="max-width:520px;margin:0 auto">' +
+    '<div class="card">' +
+      '<div style="text-align:center;padding:8px 0 16px">' +
+        '<div style="font-size:36px;margin-bottom:8px">🔑</div>' +
+        '<div style="font-size:16px;font-weight:700;margin-bottom:5px">اتصال به Supabase</div>' +
+        '<div style="font-size:12px;color:var(--c3);line-height:1.7">با کلید Legacy anon وصل شو یا بدون کلید ادامه بده (حالت آفلاین).</div>' +
+      '</div>' +
+      errHtml +
+      '<div style="background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.18);border-radius:var(--ra);padding:11px 13px;font-size:11px;color:var(--c2);line-height:1.9;margin-bottom:14px">' +
+        '<strong style="color:var(--green)">✅ Legacy anon key:</strong><br>' +
+        'Supabase → Settings → API Keys → تب <strong style="color:var(--yellow)">Legacy anon, service_role API keys</strong> → کپی <strong style="color:var(--teal)">anon public</strong>' +
+      '</div>' +
+      '<div class="fr"><label class="fl">API Key (اختیاری)</label>' +
+        '<textarea class="fi" id="key-input" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="font-family:monospace;font-size:11px;resize:none">' + savedKey + '</textarea>' +
+      '</div>' +
+      '<button onclick="doConnect()" class="btn" style="width:100%;padding:13px;font-size:14px;margin-bottom:8px" id="connect-btn">🚀 با Supabase وصل شو</button>' +
+      '<button onclick="startOfflineMode()" class="btn sec" style="width:100%;padding:10px;font-size:13px">📱 بدون کلید (حالت آفلاین)</button>' +
+      (savedKey ? '<button onclick="LSdel(\'sb_api_key\');location.reload()" class="btn danger" style="width:100%;padding:8px;margin-top:8px;font-size:11px">🗑️ کلید ذخیره‌شده را پاک کن</button>' : '') +
+    '</div>' +
+    '<div style="text-align:center;margin-top:10px;font-size:10px;color:var(--c5)">حالت آفلاین: داده‌ها فقط در مرورگر شما ذخیره میشن.</div>' +
+    '</div>';
+  setTimeout(function() { const el = document.getElementById('key-input'); if (el && savedKey) { el.focus(); el.select(); } }, 80);
+}
+
+/* ── Offline mode ── */
+function startOfflineMode() {
+  CLOUD_ENABLED.value = false;
+  setSyncDot('err');
+  showLoad('بارگذاری از حافظه...', '');
+  showLoadScreen();
+  setTimeout(() => {
+    // Load from localStorage first
+    const cachedDecks = lsGet(LS_KEYS.decks);
+    const cachedCards = lsGet(LS_KEYS.cards);
+    const needsReseed = !cachedDecks || !cachedCards || cachedCards.length < SEED_VOC.length;
+    if (!needsReseed) {
+      STATE.decks = cachedDecks;
+      STATE.cards = cachedCards;
+    } else {
+      // Seed fresh from built-in data (version update or first time)
+      STATE.decks = []; STATE.cards = [];
+      seedToLocalStorage(true);
+    }
+    const cachedSettings = lsGet(LS_KEYS.settings);
+    if (cachedSettings) STATE.settings = cachedSettings;
+    const streak = STATE.settings['streak'] || '0';
+    const sEl = document.getElementById('streak-n');
+    if (sEl) sEl.textContent = streak;
+    updateBadges();
+    hideLoadScreen();
+    go('decks');
+    if (cachedCards && cachedCards.length > 0) {
+      toast('📱 ' + STATE.cards.length + ' کارت از حافظه بارگذاری شد', 'ok');
+    } else {
+      toast('📱 ' + STATE.cards.length + ' کارت آماده – حالت آفلاین', 'ok');
+    }
+  }, 300);
+}
+
+/* ── Connect with key ── */
+async function doConnect() {
+  const inputEl = document.getElementById('key-input');
+  const key = inputEl ? inputEl.value.trim() : '';
+  if (!key) { startOfflineMode(); return; }
+  if (!key.startsWith('eyJ') && !key.startsWith('sb_')) {
+    toast('کلید باید با eyJ یا sb_ شروع بشه', 'bad'); return;
+  }
+  LSset('sb_api_key', key);
+  CONFIG.SUPABASE_KEY = key;
+  const btn = document.getElementById('connect-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ اتصال...'; }
+  await connectAndLoad();
+}
+
+/* ── Main loader ── */
+async function connectAndLoad() {
+  showLoadScreen();
+  showLoad('بارگذاری...', '');
+
+  const ok = await initSupabase();
+
+  if (!ok) {
+    CLOUD_ENABLED.value = false;
+    // Load from cache or seed
+    const cachedDecks = lsGet(LS_KEYS.decks);
+    const cachedCards = lsGet(LS_KEYS.cards);
+    const needsReseed2 = !cachedDecks || !cachedCards || cachedCards.length < SEED_VOC.length;
+    if (!needsReseed2) {
+      STATE.decks = cachedDecks;
+      STATE.cards = cachedCards;
+    } else {
+      STATE.decks = []; STATE.cards = [];
+      seedToLocalStorage(true);
+    }
+    const cachedSettings = lsGet(LS_KEYS.settings);
+    if (cachedSettings) STATE.settings = cachedSettings;
+    const streak = STATE.settings['streak'] || '0';
+    const sEl = document.getElementById('streak-n');
+    if (sEl) sEl.textContent = streak;
+    updateBadges();
+    hideLoadScreen();
+    go('decks');
+    // Show status only if key was provided (implies user wanted cloud)
+    if (CONFIG.SUPABASE_KEY && CONFIG.SUPABASE_KEY.length > 10) {
+      toast('📱 آفلاین – ' + STATE.cards.length + ' کارت از حافظه', 'warn');
+    } else {
+      toast('📱 ' + STATE.cards.length + ' کارت آماده', 'ok');
+    }
+    return;
+  }
+
+  CLOUD_ENABLED.value = true;
+
+  showLoad('بارگذاری Decks از Cloud...', '');
+  await loadDecks();
+
+  if (STATE.decks.length === 0) {
+    showLoad('اولین راه‌اندازی – دیتابیس پر میشه...', 'لطفاً صبر کن');
+    await seedDatabase((done, total) => showLoad('کارت‌ها: ' + done + ' / ' + total, ''));
+    await loadDecks();
+  }
+
+  showLoad('بارگذاری کارت‌ها...', STATE.decks.length + ' Deck');
+  await loadCards();
+
+  if (STATE.decks.length > 0 && STATE.cards.length === 0) {
+    showLoad('کارت‌ها ایجاد میشن...', '');
+    await seedDatabase((done, total) => showLoad('کارت‌ها: ' + done + ' / ' + total, ''));
+    await loadDecks();
+    await loadCards();
+  }
+
+  // Also seed localStorage for offline fallback
+  lsSet(LS_KEYS.decks, STATE.decks);
+  lsSaveCards();
+
+  showLoad('تنظیمات...', '');
+  await loadSettings();
+
+  const streak = STATE.settings['streak'] || '0';
+  const sEl2 = document.getElementById('streak-n');
+  if (sEl2) sEl2.textContent = streak;
+  updateBadges();
+  hideLoadScreen();
+  go('decks');
+  toast('☁️ Cloud sync فعال', 'ok');
+}
+
+/* ── settings changeKey ── */
+async function changeKey() {
+  const keyEl = document.getElementById('set-key');
+  const key = keyEl ? keyEl.value.trim() : '';
+  if (!key || (!key.startsWith('eyJ') && !key.startsWith('sb_'))) {
+    toast('کلید نادرست!', 'bad'); return;
+  }
+  LSset('sb_api_key', key);
+  CONFIG.SUPABASE_KEY = key;
+  toast('کلید ذخیره شد – اتصال مجدد...', 'ok');
+  await connectAndLoad();
+}
+
+/* ── saveSettings ── */
+async function saveSettings() {
+  const nw = document.getElementById('set-new')?.value || '20';
+  const rv = document.getElementById('set-rev')?.value || '100';
+  CONFIG.NEW_CARDS_PER_DAY = parseInt(nw);
+  STATE.settings['new_cards_per_day'] = nw;
+  STATE.settings['max_reviews_per_day'] = rv;
+  lsSaveSettings();
+  if (CLOUD_ENABLED.value) {
+    sbFetch('POST', 'settings', null, [{key:'new_cards_per_day',value:nw},{key:'max_reviews_per_day',value:rv}]).catch(() => {});
+  }
+  toast('✅ ذخیره شد!', 'ok');
+}
+
+/* ── resetAllProgress ── */
+async function resetAllProgress() {
+  if (!confirm('همه پیشرفت‌ها پاک بشن؟')) return;
+  const now = new Date().toISOString();
+  const fields = { interval:1, ef:2.5, reps:0, lapses:0, status:'new', total_reviews:0, correct_reviews:0, due:now, last_review:null };
+  STATE.cards = STATE.cards.map(c => ({ ...c, ...fields }));
+  lsSaveCards();
+  if (CLOUD_ENABLED.value) {
+    sbFetch('PATCH', 'cards', 'interval=gte.0', fields).catch(() => {});
+  }
+  updateBadges();
+  toast('Fortschritt zurückgesetzt', 'warn');
+}
+
+/* ── Bootstrap ── */
+async function bootstrap() {
+  const key = LS('sb_api_key') || '';
+  if (!key) {
+    // No key saved → load offline immediately, no key page
+    CLOUD_ENABLED.value = false;
+    const cachedDecks = lsGet(LS_KEYS.decks);
+    const cachedCards = lsGet(LS_KEYS.cards);
+    const needsReseed2 = !cachedDecks || !cachedCards || cachedCards.length < SEED_VOC.length;
+    if (!needsReseed2) {
+      STATE.decks = cachedDecks;
+      STATE.cards = cachedCards;
+    } else {
+      STATE.decks = []; STATE.cards = [];
+      seedToLocalStorage(true);
+    }
+    const cachedSettings = lsGet(LS_KEYS.settings);
+    if (cachedSettings) STATE.settings = cachedSettings;
+    const streak = STATE.settings['streak'] || '0';
+    const sEl = document.getElementById('streak-n');
+    if (sEl) sEl.textContent = streak;
+    updateBadges();
+    hideLoadScreen();
+    go('decks');
+    return;
+  }
+  CONFIG.SUPABASE_KEY = key;
+  await connectAndLoad();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && e.ctrlKey) {
+    const ki = document.getElementById('key-input');
+    if (ki && document.activeElement === ki) doConnect();
+  }
+});
+
+bootstrap();
+
+</script>
+</body>
+</html>
